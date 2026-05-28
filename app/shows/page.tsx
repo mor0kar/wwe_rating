@@ -317,6 +317,9 @@ export default function ShowsPage() {
           <Link href="/stats" className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600">
             Stats
           </Link>
+          <Link href="/settings" className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600" aria-label="Personen verwalten">
+            ⚙
+          </Link>
           <Link href="/shows/add" className="text-sm px-3 py-1.5 bg-gray-900 text-white rounded-lg">
             + Neu
           </Link>
