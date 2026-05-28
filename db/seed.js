@@ -6,7 +6,7 @@ import postgres from 'postgres'
 import * as dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 
-const sql = postgres(process.env.DATABASE_URL, { ssl: 'require' })
+const sql = postgres(process.env.POSTGRES_URL, { ssl: 'require' })
 
 const SHOWS = [
   {"type":"RAW","date":"2026-01-05","title":"","ratings":{"Foffi":8.5,"Jan":8.0,"Björn":8.0,"Curry":8.5}},
