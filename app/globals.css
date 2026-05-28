@@ -12,3 +12,11 @@
   --color-nxt: #f0fdf4;
   --color-nxt-text: #166534;
 }
+
+/* Scrollbar verstecken — wird per Klasse scrollbar-none genutzt */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

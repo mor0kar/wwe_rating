@@ -31,10 +31,9 @@ export default function AddShowPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.back()} className="text-gray-400 text-sm">← Zurück</button>
-        <h1 className="text-lg font-semibold text-gray-900">Neue Show</h1>
+    <div className="max-w-lg mx-auto px-4 py-6 pb-24">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Neue Show</h1>
       </div>
 
       <div className="space-y-4">

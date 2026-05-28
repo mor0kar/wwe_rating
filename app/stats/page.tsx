@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import sql from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -62,10 +61,9 @@ export default async function StatsPage() {
   const stats = await getStats()
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/shows" className="text-gray-400 text-sm">← Shows</Link>
-        <h1 className="text-lg font-semibold text-gray-900">Statistiken</h1>
+    <div className="max-w-lg mx-auto px-4 py-6 pb-24">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Statistiken</h1>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-6">

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import BottomNav from './components/BottomNav'
 
 export const metadata: Metadata = {
   title: 'WWE Rater',
@@ -26,8 +27,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
-      <body className="bg-gray-50 min-h-screen">
+      <body className="bg-gray-50 min-h-screen antialiased">
         {children}
+        <BottomNav />
       </body>
     </html>
   )

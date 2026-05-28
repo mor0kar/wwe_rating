@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 
 export default function SettingsPage() {
   const [persons, setPersons] = useState<string[]>([])
@@ -60,13 +59,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
+    <div className="max-w-lg mx-auto px-4 py-6 pb-24">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/shows" className="text-gray-400 text-sm">
-          ← Zurück
-        </Link>
-        <h1 className="text-lg font-semibold text-gray-900">Personen</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Einstellungen</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Personen verwalten</p>
       </div>
 
       {/* Aktuelle Personen */}

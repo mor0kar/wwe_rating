@@ -27,25 +27,37 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">WWE Rater 🏆</h1>
-        <p className="text-sm text-gray-500 mb-8">PIN eingeben um reinzukommen</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Branding */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl mb-4 shadow-lg">
+            <span className="text-2xl">🏆</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">WWE Rater</h1>
+          <p className="text-sm text-gray-500 mt-1">Foffi · Jan · Björn · Curry</p>
+        </div>
+
+        {/* Login-Formular */}
+        <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="password"
             inputMode="numeric"
-            placeholder="PIN"
+            placeholder="PIN eingeben"
             value={pin}
             onChange={e => setPin(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg tracking-widest text-center outline-none focus:border-gray-400"
+            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-lg tracking-widest text-center outline-none focus:border-gray-400 transition-colors"
             autoFocus
           />
-          {error && <p className="text-sm text-red-500 text-center">Falscher PIN</p>}
+          {error && (
+            <p className="text-sm text-red-500 text-center">
+              Falscher PIN — versuch's nochmal
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading || !pin}
-            className="w-full bg-gray-900 text-white rounded-xl py-3 font-medium disabled:opacity-50"
+            className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-medium text-base disabled:opacity-40 transition-opacity"
           >
             {loading ? 'Prüfen...' : 'Rein'}
           </button>

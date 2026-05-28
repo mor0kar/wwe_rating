@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 type Show = {
@@ -312,23 +311,11 @@ export default function ShowsPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">WWE Rater</h1>
-          <p className="text-sm text-gray-400">{shows.length} Shows</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/stats" className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600">
-            Stats
-          </Link>
-          <Link href="/settings" className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600" aria-label="Personen verwalten">
-            ⚙
-          </Link>
-          <Link href="/shows/add" className="text-sm px-3 py-1.5 bg-gray-900 text-white rounded-lg">
-            + Neu
-          </Link>
-        </div>
+    <div className="max-w-lg mx-auto px-4 py-6 pb-24">
+      {/* Header — Navigation jetzt in der Bottom Nav */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">WWE Rater</h1>
+        <p className="text-sm text-gray-400 mt-0.5">{shows.length} Shows</p>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4 scrollbar-none">
