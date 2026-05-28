@@ -1,16 +1,22 @@
 import Link from 'next/link'
 import sql from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
+type ShowRow = { id: number; type: string; date: string; title: string }
+type RatingRow = { show_id: number; person_name: string; score: number }
+type PersonRow = { name: string }
+
 async function getStats() {
-  const shows = await sql`SELECT * FROM shows ORDER BY date DESC`
-  const ratings = await sql`SELECT * FROM ratings`
-  const persons = await sql`SELECT name FROM persons ORDER BY id`
+  const shows = await sql`SELECT * FROM shows ORDER BY date DESC` as unknown as ShowRow[]
+  const ratings = await sql`SELECT * FROM ratings` as unknown as RatingRow[]
+  const persons = await sql`SELECT name FROM persons ORDER BY id` as unknown as PersonRow[]
 
   const showsWithRatings = shows.map(show => ({
     ...show,
     ratings: Object.fromEntries(
       ratings.filter(r => r.show_id === show.id).map(r => [r.person_name, Number(r.score)])
-    ),
+    ) as Record<string, number>,
   }))
 
   function avg(scores: number[]) {
