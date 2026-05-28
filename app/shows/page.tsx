@@ -11,7 +11,7 @@ type Show = {
   notes: Record<string, string | null>
 }
 
-const SHOW_TYPES = ['RAW', 'SmackDown', 'NXT', 'PLE', 'SNM']
+const SHOW_TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
 
 const BADGE: Record<string, string> = {
   RAW: 'bg-red-950 text-red-400',

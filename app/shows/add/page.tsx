@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const TYPES = ['RAW', 'SmackDown', 'NXT', 'PLE', 'SNM']
 
@@ -11,10 +11,11 @@ function fmt(n: number): string {
 
 export default function AddShowPage() {
   const router = useRouter()
+  const params = useSearchParams()
   const [persons, setPersons] = useState<string[]>([])
-  const [type, setType] = useState('RAW')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [title, setTitle] = useState('')
+  const [type, setType] = useState(params.get('type') ?? 'RAW')
+  const [date, setDate] = useState(params.get('date') ?? new Date().toISOString().split('T')[0])
+  const [title, setTitle] = useState(params.get('title') ?? '')
   const [ratings, setRatings] = useState<Record<string, number>>({})
   const [active, setActive] = useState<Record<string, boolean>>({})
   const [danhausen, setDanhausen] = useState<Record<string, boolean>>({})
