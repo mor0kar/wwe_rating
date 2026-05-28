@@ -11,13 +11,13 @@ export default function BottomNav() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-[env(safe-area-inset-bottom)]">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-2">
         {/* Shows */}
         <Link
           href="/shows"
           className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center px-3 transition-colors ${
-            isActive('/shows') && !isActive('/shows/add') ? 'text-gray-900' : 'text-gray-400'
+            isActive('/shows') && !isActive('/shows/add') ? 'text-zinc-50' : 'text-zinc-600'
           }`}
           aria-label="Shows"
         >
@@ -32,7 +32,7 @@ export default function BottomNav() {
         <Link
           href="/stats"
           className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center px-3 transition-colors ${
-            isActive('/stats') ? 'text-gray-900' : 'text-gray-400'
+            isActive('/stats') ? 'text-zinc-50' : 'text-zinc-600'
           }`}
           aria-label="Stats"
         >
@@ -48,20 +48,19 @@ export default function BottomNav() {
           className="flex flex-col items-center justify-center -mt-5"
           aria-label="Neue Show"
         >
-          <span className="w-14 h-14 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-lg">
+          <span className="w-14 h-14 bg-zinc-100 text-zinc-950 rounded-full flex items-center justify-center shadow-lg">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7">
               <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
             </svg>
           </span>
-          <span className="text-[10px] font-medium leading-none mt-1 text-gray-400">Neu</span>
+          <span className="text-[10px] font-medium leading-none mt-1 text-zinc-600">Neu</span>
         </Link>
 
-        {/* Stats (Platzhalter-Spacer bereits als Stats oben) */}
         {/* Upcoming */}
         <Link
           href="/upcoming"
           className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center px-3 transition-colors ${
-            isActive('/upcoming') ? 'text-gray-900' : 'text-gray-400'
+            isActive('/upcoming') ? 'text-zinc-50' : 'text-zinc-600'
           }`}
           aria-label="Kalender"
         >
@@ -75,7 +74,7 @@ export default function BottomNav() {
         <Link
           href="/settings"
           className={`flex flex-col items-center gap-0.5 min-w-[44px] min-h-[44px] justify-center px-3 transition-colors ${
-            isActive('/settings') ? 'text-gray-900' : 'text-gray-400'
+            isActive('/settings') ? 'text-zinc-50' : 'text-zinc-600'
           }`}
           aria-label="Einstellungen"
         >

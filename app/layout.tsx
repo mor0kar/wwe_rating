@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import BottomNav from './components/BottomNav'
+import TopNav from './components/TopNav'
 
 export const metadata: Metadata = {
   title: 'WWE Rater',
@@ -21,14 +22,18 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#111827',
+  themeColor: '#09090b',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de">
-      <body className="bg-gray-50 min-h-screen antialiased">
-        {children}
+      <body className="bg-zinc-950 min-h-screen antialiased">
+        <TopNav />
+        {/* Auf Desktop: Abstand für die fixe TopNav (56px = h-14) */}
+        <div className="lg:pt-14">
+          {children}
+        </div>
         <BottomNav />
       </body>
     </html>

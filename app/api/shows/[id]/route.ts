@@ -10,7 +10,19 @@ export async function PATCH(
   const showId = parseInt(id, 10)
   if (isNaN(showId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
-  const { type, date, title, ratings } = await req.json()
+  const {
+    type,
+    date,
+    title,
+    ratings,
+    notes,
+  }: {
+    type: string
+    date: string
+    title?: string
+    ratings: Record<string, number>
+    notes?: Record<string, string>
+  } = await req.json()
 
   await sql`
     UPDATE shows
@@ -23,13 +35,43 @@ export async function PATCH(
   // Bestehende Ratings löschen und neu einsetzen
   await sql`DELETE FROM ratings WHERE show_id = ${showId}`
 
-  for (const [person, score] of Object.entries(ratings as Record<string, number>)) {
+  for (const [person, score] of Object.entries(ratings)) {
     if (score === null || score === undefined) continue
+    const note = notes?.[person] ?? null
     await sql`
-      INSERT INTO ratings (show_id, person_name, score)
-      VALUES (${showId}, ${person}, ${score})
+      INSERT INTO ratings (show_id, person_name, score, note)
+      VALUES (${showId}, ${person}, ${score}, ${note})
     `
   }
+
+  return NextResponse.json({ ok: true })
+}
+
+// POST /api/shows/[id] — Einzelnes Rating einer Person hinzufügen oder aktualisieren
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const showId = parseInt(id, 10)
+  if (isNaN(showId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+
+  const { person, score, note }: { person: string; score: number; note?: string } = await req.json()
+
+  if (!person || typeof person !== 'string') {
+    return NextResponse.json({ error: 'person is required' }, { status: 400 })
+  }
+  if (typeof score !== 'number') {
+    return NextResponse.json({ error: 'score must be a number' }, { status: 400 })
+  }
+
+  await sql`
+    INSERT INTO ratings (show_id, person_name, score, note)
+    VALUES (${showId}, ${person}, ${score}, ${note ?? null})
+    ON CONFLICT (show_id, person_name)
+    DO UPDATE SET score = EXCLUDED.score,
+                  note  = EXCLUDED.note
+  `
 
   return NextResponse.json({ ok: true })
 }

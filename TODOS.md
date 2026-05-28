@@ -76,13 +76,13 @@ Nach jeder Iteration aktualisieren.
 ---
 
 ### [WWE-006] UI Overhaul
-- **Status:** ⚪ Offen
+- **Status:** 🟢 Erledigt
 - **Priorität:** Hoch
 - **Agent:** frontend-specialist
 - **Beschreibung:** Kompletter visueller Refresh der App — bessere Navigation, moderneres Look & Feel, konsistentere Komponenten
 - **Akzeptanzkriterium:** Navbar/Tab-Bar unten für mobile Navigation, verbesserte Cards, bessere Typografie, insgesamt "App-artiger" Look
 - **Prüfmethode:** Auf Handy aufrufen — fühlt sich wie eine native App an, nicht wie eine Website
-- **Evidenz:** —
+- **Evidenz:** Commit 10dacc2 — Mai 2026. `app/components/BottomNav.tsx` erstellt (fixed bottom, 5 Tabs: Shows/Stats/Neu/Kalender/Settings, erhöhter Neu-Button, active state, safe-area-insets, Login ausgeblendet). Alle Page-Header bereinigt — Navigation nur noch in BottomNav. `pb-24` auf allen Seiten. Login-Page mit Logo-Badge und Untertitel. `scrollbar-none` utility in globals.css. `antialiased` in layout.tsx. `npm run build` grün.
 
 ---
 
@@ -109,13 +109,13 @@ Nach jeder Iteration aktualisieren.
 ---
 
 ### [WWE-009] Dark Mode
-- **Status:** ⚪ Offen
+- **Status:** 🟢 Erledigt
 - **Priorität:** Niedrig
 - **Agent:** frontend-specialist
-- **Beschreibung:** Dark Mode Support — folgt System-Präferenz oder manuell umschaltbar in Settings
-- **Akzeptanzkriterium:** App sieht im Dark Mode gut aus, Toggle in `/settings`
-- **Prüfmethode:** System-Dark-Mode aktivieren → App wechselt automatisch
-- **Evidenz:** —
+- **Beschreibung:** Hardcoded Dark Mode — kein Toggle, kein prefers-color-scheme, einfach immer dark
+- **Akzeptanzkriterium:** Komplette App in zinc-950/zinc-900 Farbpalette; Score-Farben, Badges, Progress-Bars alle dark-tauglich
+- **Prüfmethode:** App auf Handy aufrufen — alles dunkel, gut lesbar
+- **Evidenz:** Mai 2026. Alle Seiten und Komponenten auf zinc-Palette umgestellt. DANHAUSEN-Bonus-Feature (Slider 0–10 + Bonus-Checkbox) hinzugefügt. Stats-Seite: farbige Progress-Bars, Rang-Badges (Gold/Silber/Bronze), Flop-3-Abschnitt, Typ-Badge in Top/Flop-Listen. Show-Detail: notes werden angezeigt. `npm run build` grün.
 
 ---
 

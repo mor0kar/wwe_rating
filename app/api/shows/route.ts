@@ -14,7 +14,14 @@ export async function GET(req: NextRequest) {
   const data = shows.map(show => ({
     ...show,
     ratings: Object.fromEntries(
-      ratings.filter(r => r.show_id === show.id).map(r => [r.person_name, Number(r.score)])
+      ratings
+        .filter(r => r.show_id === show.id)
+        .map(r => [r.person_name, Number(r.score)])
+    ),
+    notes: Object.fromEntries(
+      ratings
+        .filter(r => r.show_id === show.id)
+        .map(r => [r.person_name, r.note ?? null])
     ),
   }))
 
@@ -22,7 +29,19 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { type, date, title, ratings } = await req.json()
+  const {
+    type,
+    date,
+    title,
+    ratings,
+    notes,
+  }: {
+    type: string
+    date: string
+    title?: string
+    ratings: Record<string, number>
+    notes?: Record<string, string>
+  } = await req.json()
 
   const [show] = await sql`
     INSERT INTO shows (type, date, title)
@@ -30,11 +49,12 @@ export async function POST(req: NextRequest) {
     RETURNING *
   `
 
-  for (const [person, score] of Object.entries(ratings as Record<string, number>)) {
+  for (const [person, score] of Object.entries(ratings)) {
     if (score === null || score === undefined) continue
+    const note = notes?.[person] ?? null
     await sql`
-      INSERT INTO ratings (show_id, person_name, score)
-      VALUES (${show.id}, ${person}, ${score})
+      INSERT INTO ratings (show_id, person_name, score, note)
+      VALUES (${show.id}, ${person}, ${score}, ${note})
     `
   }
 

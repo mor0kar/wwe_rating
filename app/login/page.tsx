@@ -27,18 +27,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-950 relative overflow-hidden">
+      {/* Hintergrund-Pattern */}
+      <div className="absolute inset-0 hero-pattern opacity-20" />
+      {/* Radialer Rot-Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(127,0,0,0.25)_0%,transparent_70%)]" />
+
+      <div className="relative w-full max-w-sm">
         {/* Branding */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 rounded-2xl mb-4 shadow-lg">
-            <span className="text-2xl">🏆</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-[#DC0000] rounded-2xl mb-5 shadow-[0_0_40px_rgba(220,0,0,0.5)]">
+            <span className="text-4xl">⚡</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">WWE Rater</h1>
-          <p className="text-sm text-gray-500 mt-1">Foffi · Jan · Björn · Curry</p>
+          <h1 className="text-4xl font-black uppercase tracking-tight text-white text-glow-red">
+            WWE Rater
+          </h1>
+          <p className="text-zinc-500 mt-2 text-sm uppercase tracking-widest">
+            Foffi · Jan · Björn · Curry
+          </p>
         </div>
 
-        {/* Login-Formular */}
+        {/* Formular */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="password"
@@ -46,20 +55,20 @@ export default function LoginPage() {
             placeholder="PIN eingeben"
             value={pin}
             onChange={e => setPin(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-lg tracking-widest text-center outline-none focus:border-gray-400 transition-colors"
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3.5 text-lg tracking-widest text-center text-zinc-50 outline-none focus:border-red-600 transition-colors"
             autoFocus
           />
           {error && (
-            <p className="text-sm text-red-500 text-center">
-              Falscher PIN — versuch's nochmal
+            <p className="text-sm text-red-400 text-center">
+              Falscher PIN — versuch&apos;s nochmal
             </p>
           )}
           <button
             type="submit"
             disabled={loading || !pin}
-            className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-medium text-base disabled:opacity-40 transition-opacity"
+            className="w-full bg-[#DC0000] hover:bg-red-700 text-white rounded-xl py-3.5 font-bold text-base uppercase tracking-widest disabled:opacity-40 transition-all"
           >
-            {loading ? 'Prüfen...' : 'Rein'}
+            {loading ? 'Prüfen...' : 'EINLOGGEN'}
           </button>
         </form>
       </div>
