@@ -1,5 +1,4 @@
 # TODOS.md — wwe-rater
-
 Kanonisches Aufgaben- und Evidenzboard für dieses Projekt.
 Nach jeder Iteration aktualisieren.
 
@@ -20,13 +19,13 @@ Nach jeder Iteration aktualisieren.
 ## Aktive Tasks
 
 ### [WWE-001] Initialer Deployment-Setup
-- **Status:** ⚪ Offen
+- **Status:** 🟢 Erledigt
 - **Priorität:** Hoch
 - **Agent:** implementer
-- **Beschreibung:** Repo auf GitHub anlegen, Neon-Datenbank einrichten, auf Vercel deployen
+- **Beschreibung:** Repo auf GitHub anlegen, Supabase-Datenbank einrichten, auf Vercel deployen
 - **Akzeptanzkriterium:** App läuft unter einer Vercel-URL, PIN-Login funktioniert, Seed-Daten sind geladen
 - **Prüfmethode:** Im Browser aufrufen, mit PIN einloggen, 48 Shows sichtbar
-- **Evidenz:** —
+- **Evidenz:** https://wwe-rater.vercel.app — Mai 2026
 
 ---
 
