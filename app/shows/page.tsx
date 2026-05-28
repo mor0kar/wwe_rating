@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 type Show = {
   id: number
@@ -165,6 +166,7 @@ function ShowCard({
   onUpdated: (updated: Show) => void
   onDeleted: (id: number) => void
 }) {
+  const router = useRouter()
   const [mode, setMode] = useState<'view' | 'edit' | 'confirmDelete'>('view')
   const [deleting, setDeleting] = useState(false)
 
@@ -201,7 +203,10 @@ function ShowCard({
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4">
+    <div
+      className="bg-white border border-gray-100 rounded-2xl p-4 cursor-pointer active:bg-gray-50 transition-colors"
+      onClick={() => router.push(`/shows/${show.id}`)}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
@@ -222,9 +227,9 @@ function ShowCard({
               <p className="text-xs text-gray-400">Schnitt</p>
             </div>
           )}
-          {/* Edit-Button */}
+          {/* Edit-Button — stopPropagation verhindert Navigation zur Detail-Seite */}
           <button
-            onClick={() => { setMode('edit') }}
+            onClick={e => { e.stopPropagation(); setMode('edit') }}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
             aria-label="Show bearbeiten"
           >
@@ -253,13 +258,13 @@ function ShowCard({
           <p className="text-sm text-gray-600">Show wirklich löschen?</p>
           <div className="flex gap-2">
             <button
-              onClick={() => setMode('view')}
+              onClick={e => { e.stopPropagation(); setMode('view') }}
               className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg text-gray-500"
             >
               Nein
             </button>
             <button
-              onClick={handleDelete}
+              onClick={e => { e.stopPropagation(); handleDelete() }}
               disabled={deleting}
               className="text-xs px-3 py-1.5 bg-red-500 text-white rounded-lg font-medium disabled:opacity-50"
             >
@@ -270,7 +275,7 @@ function ShowCard({
       ) : (
         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end">
           <button
-            onClick={() => setMode('confirmDelete')}
+            onClick={e => { e.stopPropagation(); setMode('confirmDelete') }}
             className="text-xs text-red-400 hover:text-red-600 transition-colors"
           >
             Löschen
