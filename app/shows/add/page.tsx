@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 const TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
@@ -9,7 +9,7 @@ function fmt(n: number): string {
   return s.includes('.') ? s : s + '.0'
 }
 
-export default function AddShowPage() {
+function AddShowForm() {
   const router = useRouter()
   const params = useSearchParams()
   const [persons, setPersons] = useState<string[]>([])
@@ -207,5 +207,14 @@ export default function AddShowPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+// useSearchParams() muss in einer Suspense-Grenze liegen (Next.js 16)
+export default function AddShowPage() {
+  return (
+    <Suspense fallback={null}>
+      <AddShowForm />
+    </Suspense>
   )
 }
