@@ -197,6 +197,16 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-019] UI Overhaul v2 (Modernisierung)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch
+- **Agent:** frontend-specialist
+- **Beschreibung:** App von „Admin-Dashboard"-Look zu moderner Wrestling-App — Display-Font, Score als Hero-Element, Scorecard-Look, Glas-Nav, einheitliche Header mit Textur
+- **Akzeptanzkriterium:** Markante Headlines, Score visuell prominent, Karten mit Tiefe/Tönung, blurred Navigation mit aktivem Indikator, Lade-Skeletons, konsistente Header
+- **Evidenz:** Mai 2026. (1) **Font:** Oswald via `next/font` → `--font-heading`, h1/h2/h3 + Wordmark + Scores. (2) **ScoreRing** (`app/components/ScoreRing.tsx`, SVG-Gauge, DANHAUSEN-Glow) auf `/shows`-Cards und groß im Detail-Header. (3) **Scorecard-Look:** typ-getönte Verläufe (`card-tint-*`), größere Logos, Press-Animation, `animate-fade-in`. (4) **Glas-Nav:** `backdrop-blur` Top-/Bottom-Nav + aktiver Indikator (Pill/Underline). (5) **Skeletons** statt „Lädt…". (6) **Header+Textur:** Grain-Overlay (`texture-grain`) + Rot-Glow auf Hero/Stats/Kalender. CLAUDE.md (Font-Regel) aktualisiert. `npm run build` grün (12/12).
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

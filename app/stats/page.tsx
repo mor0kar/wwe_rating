@@ -216,10 +216,12 @@ export default async function StatsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 mb-8">
-        <div className="max-w-6xl mx-auto px-4 py-8 lg:py-12">
-          <p className="text-red-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Season Rankings</p>
-          <h1 className="text-3xl lg:text-4xl font-black uppercase tracking-tight text-white">Hall of Fame</h1>
+      <div className="relative overflow-hidden border-b border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 mb-8">
+        <div className="absolute inset-0 texture-grain opacity-[0.06] mix-blend-overlay pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(220,0,0,0.12),transparent_60%)] pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-4 py-8 lg:py-12">
+          <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Season Rankings</p>
+          <h1 className="text-4xl lg:text-5xl font-bold uppercase tracking-tight text-white">Hall of Fame</h1>
         </div>
       </div>
 
@@ -234,7 +236,7 @@ export default async function StatsPage() {
           ].map(s => (
             <div key={s.label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
               <p className="text-xs text-zinc-500 mb-1">{s.label}</p>
-              <p className={`text-3xl font-bold ${s.isScore && s.score != null ? scoreColor(s.score) : 'text-zinc-50'}`}>
+              <p className={`font-heading text-4xl font-bold tabular-nums ${s.isScore && s.score != null ? scoreColor(s.score) : 'text-zinc-50'}`}>
                 {s.value}
               </p>
             </div>

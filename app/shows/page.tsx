@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getShowLogo } from '@/lib/showLogos'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
+import ScoreRing from '@/app/components/ScoreRing'
 
 type Show = {
   id: number
@@ -35,6 +36,14 @@ const BORDER_ACCENT: Record<string, string> = {
   PLE: 'border-l-purple-600',
   SNM: 'border-l-amber-500',
   NXT: 'border-l-green-600',
+}
+
+// Typ-getönter Verlauf (Scorecard-Look)
+const TINT: Record<string, string> = {
+  RAW: 'card-tint-raw',
+  SmackDown: 'card-tint-sd',
+  PLE: 'card-tint-ple',
+  SNM: 'card-tint-snm',
 }
 
 function scoreColor(s: number) {
@@ -293,56 +302,56 @@ function ShowCard({
 
   return (
     <div
-      className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accentBorder} rounded-2xl p-4 cursor-pointer active:bg-zinc-800 transition-colors`}
+      className={`group relative overflow-hidden bg-zinc-900 border border-zinc-800 border-l-4 ${accentBorder} rounded-2xl p-4 cursor-pointer transition-all hover:border-zinc-700 active:scale-[0.98] animate-fade-in`}
       onClick={() => router.push(`/shows/${show.id}`)}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {getShowLogo(show.type, show.title) ? (
-              <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-5 object-contain shrink-0" loading="lazy" />
-            ) : (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                {show.type}
-              </span>
-            )}
-            <span className="text-sm font-medium text-zinc-50 truncate">
+      {/* Typ-getönter Verlauf */}
+      <div className={`absolute inset-0 pointer-events-none ${TINT[show.type] || ''}`} />
+
+      <div className="relative">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1.5">
+              {getShowLogo(show.type, show.title) ? (
+                <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-7 object-contain shrink-0" loading="lazy" />
+              ) : (
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
+                  {show.type}
+                </span>
+              )}
+            </div>
+            <span className="block font-heading text-base font-semibold text-zinc-50 truncate uppercase tracking-wide">
               {show.title || show.type}
             </span>
+            <p className="text-xs text-zinc-500 mt-0.5">{dateStr}</p>
           </div>
-          <p className="text-xs text-zinc-600">{dateStr}</p>
+          <div className="flex items-start gap-1 shrink-0">
+            {a !== null && <ScoreRing value={a} size={52} />}
+            {/* Edit-Button — stopPropagation verhindert Navigation zur Detail-Seite */}
+            <button
+              onClick={e => { e.stopPropagation(); setMode('edit') }}
+              className="text-zinc-600 hover:text-zinc-300 p-1 transition-colors"
+              aria-label="Show bearbeiten"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {a !== null && (
-            <div className="text-right">
-              <span className={`text-lg font-semibold ${scoreColor(a)}`}>{fmt(a)}</span>
-              <p className="text-xs text-zinc-600">Schnitt</p>
-            </div>
-          )}
-          {/* Edit-Button — stopPropagation verhindert Navigation zur Detail-Seite */}
-          <button
-            onClick={e => { e.stopPropagation(); setMode('edit') }}
-            className="text-zinc-600 p-1"
-            aria-label="Show bearbeiten"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      {/* Ratings */}
-      <div className="flex flex-wrap gap-2">
-        {persons.map(p => (
-          <div key={p} className="flex items-center gap-1.5 bg-zinc-800 rounded-full px-3 py-1">
-            <span className="text-xs text-zinc-500">{p}</span>
-            <span className={`text-sm font-medium ${scoreColor(show.ratings[p])}`}>
-              {show.ratings[p] > 10 ? `⚡${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
-            </span>
-          </div>
-        ))}
+        {/* Ratings */}
+        <div className="flex flex-wrap gap-1.5">
+          {persons.map(p => (
+            <div key={p} className="flex items-center gap-1.5 bg-zinc-800/80 rounded-full pl-2.5 pr-2 py-1">
+              <span className="text-xs text-zinc-400">{p}</span>
+              <span className={`text-sm font-heading font-semibold tabular-nums ${scoreColor(show.ratings[p])}`}>
+                {show.ratings[p] > 10 ? `⚡${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Löschen-Toggle */}
@@ -437,10 +446,11 @@ export default function ShowsPage() {
           style={{ backgroundImage: "url('/header.png')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/60 via-zinc-950/75 to-zinc-950" />
+        <div className="absolute inset-0 texture-grain opacity-[0.07] mix-blend-overlay pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 lg:pt-16 lg:pb-12 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
             <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Show-Bewertungen</p>
-            <h1 className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">Squared Circle Ratings</h1>
+            <h1 className="font-heading text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white drop-shadow-lg leading-[0.95]">Squared Circle Ratings</h1>
             <p className="text-zinc-400 mt-2 text-sm">Foffi · Jan · Björn · Curry</p>
           </div>
           <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>
@@ -505,18 +515,38 @@ export default function ShowsPage() {
           ))}
         </div>
 
-        {loading && <p className="text-center text-zinc-600 py-12 text-sm">Lädt...</p>}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {shows.map(show => (
-            <ShowCard
-              key={show.id}
-              show={show}
-              onUpdated={handleUpdated}
-              onDeleted={handleDeleted}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-6 w-20 rounded-md" />
+                    <div className="skeleton h-4 w-32 rounded" />
+                    <div className="skeleton h-3 w-16 rounded" />
+                  </div>
+                  <div className="skeleton h-[52px] w-[52px] rounded-full" />
+                </div>
+                <div className="flex gap-1.5">
+                  <div className="skeleton h-6 w-16 rounded-full" />
+                  <div className="skeleton h-6 w-16 rounded-full" />
+                  <div className="skeleton h-6 w-16 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {shows.map(show => (
+              <ShowCard
+                key={show.id}
+                show={show}
+                onUpdated={handleUpdated}
+                onDeleted={handleDeleted}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

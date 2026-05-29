@@ -82,7 +82,9 @@ Score-Farben:
 - `≥4` → `text-amber-600`
 - `<4` → `text-red-500`
 
-Fonts: System-Font-Stack (kein externes Laden)
+Fonts:
+- Headlines/Wordmark/Scores: **Oswald** (athletic/condensed) via `next/font/google`, geladen in `app/layout.tsx`, als CSS-Var `--font-oswald` → Theme-Token `--font-heading` (Utility `font-heading`). h1/h2/h3 nutzen sie automatisch (`@layer base` in `globals.css`).
+- Body/UI: System-Font-Stack.
 
 ---
 

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import sql from '@/lib/db'
 import RatingEditor from './RatingEditor'
 import { getShowLogo } from '@/lib/showLogos'
+import ScoreRing from '@/app/components/ScoreRing'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,21 @@ const BADGE: Record<string, string> = {
   PLE: 'bg-purple-950 text-purple-400',
   SNM: 'bg-amber-950 text-amber-400',
   NXT: 'bg-green-950 text-green-400',
+}
+
+const BORDER_ACCENT: Record<string, string> = {
+  RAW: 'border-l-red-600',
+  SmackDown: 'border-l-blue-600',
+  PLE: 'border-l-purple-600',
+  SNM: 'border-l-amber-500',
+  NXT: 'border-l-green-600',
+}
+
+const TINT: Record<string, string> = {
+  RAW: 'card-tint-raw',
+  SmackDown: 'card-tint-sd',
+  PLE: 'card-tint-ple',
+  SNM: 'card-tint-snm',
 }
 
 function fmt(n: number): string {
@@ -80,18 +96,29 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Show-Header */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-4">
-        {getShowLogo(show.type, show.title) ? (
-          <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-10 object-contain mb-3" />
-        ) : (
-          <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-md mb-3 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
-            {show.type}
-          </span>
-        )}
-        <h1 className="text-xl font-bold text-zinc-50">
-          {show.title || show.type}
-        </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">{dateStr}</p>
+      <div className={`relative overflow-hidden bg-zinc-900 border border-zinc-800 border-l-4 ${BORDER_ACCENT[show.type] || 'border-l-zinc-700'} rounded-2xl p-5 mb-4`}>
+        <div className={`absolute inset-0 pointer-events-none ${TINT[show.type] || ''}`} />
+        <div className="relative flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            {getShowLogo(show.type, show.title) ? (
+              <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-11 object-contain mb-3" />
+            ) : (
+              <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-md mb-3 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
+                {show.type}
+              </span>
+            )}
+            <h1 className="font-heading text-2xl font-bold uppercase tracking-wide text-zinc-50 leading-tight">
+              {show.title || show.type}
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">{dateStr}</p>
+          </div>
+          {avg !== null && (
+            <div className="flex flex-col items-center shrink-0">
+              <ScoreRing value={avg} size={76} stroke={5} />
+              <span className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1.5">Schnitt</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Ratings */}

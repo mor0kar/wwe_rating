@@ -93,9 +93,11 @@ export default function UpcomingPage() {
       {/* Header */}
       <div className="relative overflow-hidden mb-6">
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-zinc-950" />
+        <div className="absolute inset-0 texture-grain opacity-[0.06] mix-blend-overlay pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(220,0,0,0.12),transparent_60%)] pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-6">
           <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Kommende Shows</p>
-          <h1 className="text-3xl font-black uppercase tracking-tight text-white">Kalender</h1>
+          <h1 className="text-4xl font-bold uppercase tracking-tight text-white">Kalender</h1>
           <p className="text-zinc-500 text-xs mt-1">Ortszeit &amp; deutsche Live-Zeit (🇩🇪) automatisch umgerechnet</p>
         </div>
       </div>
@@ -117,7 +119,7 @@ export default function UpcomingPage() {
                 return (
                   <div
                     key={i}
-                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 ${past && !existing ? 'opacity-40' : ''}`}
+                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 transition-colors hover:border-zinc-700 ${past && !existing ? 'opacity-40' : ''}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Datum-Pill */}
