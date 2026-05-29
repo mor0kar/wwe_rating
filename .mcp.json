@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    }
+  }
+}
+
+// OPTIONALE WEITERE MCP SERVER — bei Bedarf einkommentieren:
+//
+// Neon (Datenbankzugriff direkt aus Claude Code):
+// "neon": {
+//   "type": "http",
+//   "url": "https://mcp.neon.tech/sse"
+// }
+//
+// Vercel (Deployment-Status, Logs):
+// "vercel": {
+//   "type": "http",
+//   "url": "https://mcp.vercel.com"
+// }
+//
+// Playwright (E2E Tests / Browser-Automatisierung):
+// "playwright": {
+//   "type": "stdio",
+//   "command": "npx",
+//   "args": ["-y", "@playwright/mcp"]
+// }

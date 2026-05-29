@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-const TYPES = ['RAW', 'SmackDown', 'NXT', 'PLE', 'SNM']
+const TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
 
 function fmt(n: number): string {
   const s = parseFloat(n.toFixed(2)).toString()

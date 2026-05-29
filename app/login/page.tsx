@@ -40,7 +40,7 @@ export default function LoginPage() {
             <span className="text-4xl">⚡</span>
           </div>
           <h1 className="text-4xl font-black uppercase tracking-tight text-white text-glow-red">
-            WWE Rater
+            Squared Circle Ratings
           </h1>
           <p className="text-zinc-500 mt-2 text-sm uppercase tracking-widest">
             Foffi · Jan · Björn · Curry

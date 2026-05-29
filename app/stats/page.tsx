@@ -40,7 +40,7 @@ async function getStats() {
     return { ...s, avg: avg(sc) }
   }).filter(s => s.avg !== null).sort((a, b) => b.avg! - a.avg!)
 
-  const typeStats = ['RAW', 'SmackDown', 'PLE', 'SNM', 'NXT'].map(type => {
+  const typeStats = ['RAW', 'SmackDown', 'PLE', 'SNM'].map(type => {
     const typeShows = showsWithRatings.filter(s => s.type === type)
     const sc = typeShows.flatMap(s => Object.values(s.ratings))
     return { type, avg: avg(sc), count: typeShows.length }

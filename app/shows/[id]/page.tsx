@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import sql from '@/lib/db'
-import AddRatingSection from './AddRatingSection'
+import RatingEditor from './RatingEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,8 +58,10 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   // Alle Personen laden, um unbewertet vs. bewertet zu ermitteln
   const allPersons = await sql`SELECT name FROM persons ORDER BY id` as unknown as PersonRow[]
 
-  const ratedNames = new Set(ratings.map(r => r.person_name))
-  const unratedPersons = allPersons.map(p => p.name).filter(n => !ratedNames.has(n))
+  // Vorhandene Bewertungen als Map (Score + Note) für den Editor
+  const existing: Record<string, { score: number; note: string | null }> = Object.fromEntries(
+    ratings.map(r => [r.person_name, { score: Number(r.score), note: r.note ?? null }])
+  )
 
   const scores = ratings.map(r => Number(r.score))
   const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null
@@ -173,8 +175,15 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         </>
       )}
 
-      {/* Bewertung nachträglich hinzufügen */}
-      <AddRatingSection showId={numId} unratedPersons={unratedPersons} />
+      {/* Bewertungen hinzufügen / anpassen */}
+      <RatingEditor
+        showId={numId}
+        type={show.type}
+        date={show.date}
+        title={show.title ?? ''}
+        persons={allPersons.map(p => p.name)}
+        existing={existing}
+      />
     </div>
   )
 }

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'WWE Rater',
-    short_name: 'WWE Rater',
+    name: 'Squared Circle Ratings',
+    short_name: 'Squared Circle',
     description: 'Bewertet WWE Shows mit Foffi, Jan, Björn & Curry',
     start_url: '/shows',
     display: 'standalone',

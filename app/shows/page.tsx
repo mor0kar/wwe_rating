@@ -55,7 +55,7 @@ function avg(ratings: Record<string, number>) {
   return vals.reduce((a, b) => a + b, 0) / vals.length
 }
 
-const FILTERS = ['Alle', 'RAW', 'SmackDown', 'PLE', 'SNM', 'NXT']
+const FILTERS = ['Alle', 'RAW', 'SmackDown', 'PLE', 'SNM']
 
 // --- Inline-Edit-Card --------------------------------------------------
 
@@ -421,7 +421,7 @@ export default function ShowsPage() {
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-8 lg:pt-16 lg:pb-12 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div>
             <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Show-Bewertungen</p>
-            <h1 className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">WWE Rater</h1>
+            <h1 className="text-4xl lg:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">Squared Circle Ratings</h1>
             <p className="text-zinc-400 mt-2 text-sm">Foffi · Jan · Björn · Curry</p>
           </div>
           <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>

@@ -1,44 +1,12 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-
-type UpcomingShow = {
-  date: string        // ISO YYYY-MM-DD
-  type: 'RAW' | 'SmackDown' | 'PLE' | 'SNM'
-  title?: string
-  venue: string
-  city: string
-}
-
-const UPCOMING: UpcomingShow[] = [
-  { date: '2026-05-29', type: 'SmackDown', venue: 'Olimpic Arena', city: 'Barcelona, Spain' },
-  { date: '2026-05-31', type: 'PLE', title: 'Clash in Italy', venue: 'Inalpi Arena', city: 'Turin, Italy' },
-  { date: '2026-06-01', type: 'RAW', venue: 'Inalpi Arena', city: 'Turin, Italy' },
-  { date: '2026-06-05', type: 'SmackDown', venue: 'Unipol Arena', city: 'Bologna, Italy' },
-  { date: '2026-06-08', type: 'RAW', venue: 'Accor Arena', city: 'Paris, France' },
-  { date: '2026-06-15', type: 'RAW', venue: 'CFG Bank Arena', city: 'Baltimore, MD' },
-  { date: '2026-06-19', type: 'SmackDown', venue: 'T-Mobile Center', city: 'Kansas City, MO' },
-  { date: '2026-06-22', type: 'RAW', venue: 'The O2', city: 'London, UK' },
-  { date: '2026-06-29', type: 'RAW', title: 'RAW/SmackDown', venue: "Jim Whelan's Boardwalk Hall", city: 'Atlantic City, NJ' },
-  { date: '2026-07-06', type: 'RAW', venue: 'Allstate Arena', city: 'Chicago, IL' },
-  { date: '2026-07-10', type: 'SmackDown', venue: 'Paycom Center', city: 'Oklahoma City, OK' },
-  { date: '2026-07-13', type: 'RAW', venue: 'American Airlines Arena', city: 'Dallas, TX' },
-  { date: '2026-07-17', type: 'SmackDown', venue: 'MVP Arena', city: 'Albany, NY' },
-  { date: '2026-07-18', type: 'SNM', title: "Saturday Night's Main Event", venue: 'Madison Square Garden', city: 'New York, NY' },
-  { date: '2026-07-20', type: 'RAW', venue: 'Little Caesars Arena', city: 'Detroit, MI' },
-  { date: '2026-07-24', type: 'SmackDown', venue: 'Oakland Arena', city: 'Oakland, CA' },
-  { date: '2026-07-27', type: 'RAW', venue: 'Intuit Dome', city: 'Inglewood, CA' },
-  { date: '2026-07-31', type: 'SmackDown', venue: 'Resch Center', city: 'Green Bay, WI' },
-  { date: '2026-08-01', type: 'PLE', title: 'SummerSlam (Night One)', venue: 'US Bank Stadium', city: 'Minneapolis, MN' },
-  { date: '2026-08-02', type: 'PLE', title: 'SummerSlam (Night Two)', venue: 'US Bank Stadium', city: 'Minneapolis, MN' },
-  { date: '2026-08-03', type: 'RAW', venue: "Casey's Center", city: 'Des Moines, IA' },
-  { date: '2026-08-10', type: 'RAW', venue: 'Scope Arena', city: 'Norfolk, VA' },
-  { date: '2026-08-17', type: 'RAW', venue: 'KeyBank Arena', city: 'Buffalo, NY' },
-  { date: '2026-08-28', type: 'SmackDown', venue: 'Rocket Mortgage FieldHouse', city: 'Cleveland, OH' },
-  { date: '2026-08-31', type: 'RAW', venue: 'Spectrum Center', city: 'Charlotte, NC' },
-  { date: '2026-09-04', type: 'SmackDown', venue: 'Heritage Bank Center', city: 'Cincinnati, OH' },
-  { date: '2026-09-06', type: 'PLE', title: 'Money in the Bank', venue: 'Smoothie King Center', city: 'New Orleans, LA' },
-  { date: '2026-09-07', type: 'RAW', venue: 'Legacy Center at BJCC', city: 'Birmingham, AL' },
-]
+import {
+  getUpcomingEvents,
+  germanWatchTime,
+  localStartTime,
+  type CalendarEvent,
+} from '@/lib/calendar'
 
 const BADGE: Record<string, string> = {
   RAW: 'bg-red-950 text-red-400',
@@ -66,20 +34,15 @@ const MONTH_NAMES: Record<number, string> = {
   9: 'September', 10: 'Oktober', 11: 'November', 12: 'Dezember',
 }
 
-function groupByMonth(shows: UpcomingShow[]): Record<string, UpcomingShow[]> {
-  const groups: Record<string, UpcomingShow[]> = {}
-  for (const show of shows) {
-    const [year, month] = show.date.split('-')
+function groupByMonth(events: CalendarEvent[]): Record<string, CalendarEvent[]> {
+  const groups: Record<string, CalendarEvent[]> = {}
+  for (const ev of events) {
+    const [year, month] = ev.date.split('-')
     const key = `${year}-${month}`
     if (!groups[key]) groups[key] = []
-    groups[key].push(show)
+    groups[key].push(ev)
   }
   return groups
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso + 'T12:00:00')
-  return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })
 }
 
 function monthLabel(key: string) {
@@ -93,16 +56,39 @@ function isPast(iso: string) {
   return new Date(iso + 'T12:00:00') < today
 }
 
+type ExistingShow = { id: number; hasRatings: boolean }
+
 export default function UpcomingPage() {
   const router = useRouter()
   const today = new Date().toISOString().split('T')[0]
-  const groups = groupByMonth(UPCOMING)
+  const events = getUpcomingEvents()
+  const groups = groupByMonth(events)
 
-  function handleAdd(show: UpcomingShow) {
+  // Bereits angelegte Shows laden, um Doppel-Anlage zu verhindern.
+  // Abgleich über Typ + Datum.
+  const [existingShows, setExistingShows] = useState<Record<string, ExistingShow>>({})
+
+  useEffect(() => {
+    fetch('/api/shows?type=all')
+      .then(r => r.json())
+      .then((data: { id: number; type: string; date: string; ratings?: Record<string, number> }[]) => {
+        const map: Record<string, ExistingShow> = {}
+        for (const s of data) {
+          map[`${s.type}|${s.date}`] = {
+            id: s.id,
+            hasRatings: Object.keys(s.ratings ?? {}).length > 0,
+          }
+        }
+        setExistingShows(map)
+      })
+      .catch(() => {})
+  }, [])
+
+  function handleAdd(ev: CalendarEvent) {
     const params = new URLSearchParams({
-      type: show.type,
-      date: show.date,
-      title: show.title ?? '',
+      type: ev.type,
+      date: ev.date,
+      title: ev.title ?? '',
     })
     router.push(`/shows/add?${params.toString()}`)
   }
@@ -115,63 +101,89 @@ export default function UpcomingPage() {
         <div className="relative max-w-6xl mx-auto px-4 pt-10 pb-6">
           <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Kommende Shows</p>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white">Kalender</h1>
-          <p className="text-zinc-500 text-xs mt-1">Quelle: ESPN — Stand 28. Mai 2026</p>
+          <p className="text-zinc-500 text-xs mt-1">Ortszeit &amp; deutsche Live-Zeit (🇩🇪) automatisch umgerechnet</p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 pb-24 space-y-8">
-        {Object.entries(groups).map(([monthKey, shows]) => (
+        {Object.entries(groups).map(([monthKey, monthEvents]) => (
           <div key={monthKey}>
             <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">
               {monthLabel(monthKey)}
             </h2>
             <div className="space-y-2">
-              {shows.map((show, i) => {
-                const past = isPast(show.date)
-                const accent = BORDER_ACCENT[show.type] || 'border-l-zinc-700'
-                const isToday = show.date === today
+              {monthEvents.map((ev, i) => {
+                const past = isPast(ev.date)
+                const accent = BORDER_ACCENT[ev.type] || 'border-l-zinc-700'
+                const isToday = ev.date === today
+                const de = germanWatchTime(ev)
+                const local = localStartTime(ev)
+                const existing = existingShows[`${ev.type}|${ev.date}`]
                 return (
                   <div
                     key={i}
-                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 ${past ? 'opacity-40' : ''}`}
+                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 ${past && !existing ? 'opacity-40' : ''}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Datum-Pill */}
                       <div className={`shrink-0 text-center min-w-[52px] ${isToday ? 'text-red-400' : 'text-zinc-400'}`}>
                         <p className="text-[10px] font-medium uppercase leading-none mb-0.5">
-                          {new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short' })}
+                          {new Date(ev.date + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short' })}
                         </p>
                         <p className="text-xl font-black leading-none">
-                          {new Date(show.date + 'T12:00:00').getDate().toString().padStart(2, '0')}
+                          {new Date(ev.date + 'T12:00:00').getDate().toString().padStart(2, '0')}
                         </p>
                         <p className="text-[10px] leading-none mt-0.5">
-                          {new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', { month: 'short' })}
+                          {new Date(ev.date + 'T12:00:00').toLocaleDateString('de-DE', { month: 'short' })}
                         </p>
                       </div>
 
                       {/* Show-Info */}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          {LOGOS[show.type] ? (
-                            <img src={LOGOS[show.type]} alt={show.type} className="h-4 object-contain shrink-0" loading="lazy" />
+                          {LOGOS[ev.type] ? (
+                            <img src={LOGOS[ev.type]} alt={ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
                           ) : (
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                              {show.type}
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${BADGE[ev.type] || 'bg-zinc-800 text-zinc-300'}`}>
+                              {ev.type}
                             </span>
                           )}
-                          {show.title && show.title !== show.type && (
-                            <span className="text-sm font-semibold text-zinc-100 truncate">{show.title}</span>
+                          {ev.title && ev.title !== ev.type && (
+                            <span className="text-sm font-semibold text-zinc-100 truncate">{ev.title}</span>
                           )}
                         </div>
-                        <p className="text-xs text-zinc-500 truncate">{show.venue}</p>
-                        <p className="text-xs text-zinc-600 truncate">{show.city}</p>
+                        <p className="text-xs text-zinc-500 truncate">{ev.venue}</p>
+                        <p className="text-xs text-zinc-600 truncate">{ev.city}</p>
+
+                        {/* Zeiten: Ortszeit + deutsche Live-Zeit */}
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap text-[11px] leading-none">
+                          <span className="text-zinc-500">{local} Uhr Ortszeit</span>
+                          <span className="text-zinc-700">·</span>
+                          <span className="text-red-400 font-medium">
+                            🇩🇪 {de.time} Uhr
+                            {de.dayOffset !== 0 && (
+                              <span className="text-zinc-500 font-normal"> ({de.weekday}, {de.dateLabel})</span>
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Rating-Button (nur für nicht-vergangene Shows) */}
-                    {!past && (
+                    {/* Existiert schon eine Show? → "Bewertet ✓" zur Detailseite,
+                        sonst "Bewerten" (legt eine neue Show an) */}
+                    {existing ? (
                       <button
-                        onClick={() => handleAdd(show)}
+                        onClick={() => router.push(`/shows/${existing.id}`)}
+                        className="shrink-0 flex items-center gap-1.5 text-xs bg-green-950 hover:bg-green-900 text-green-400 border border-green-900 px-3 py-2 rounded-xl transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                        </svg>
+                        {existing.hasRatings ? 'Bewertet' : 'Angelegt'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAdd(ev)}
                         className="shrink-0 flex items-center gap-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-2 rounded-xl transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">

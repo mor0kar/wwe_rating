@@ -30,7 +30,7 @@ export default function TopNav() {
           href="/shows"
           className="text-lg font-black italic uppercase tracking-tight text-white text-glow-red"
         >
-          ⚡ WWE RATER
+          ⚡ SQUARED CIRCLE RATINGS
         </Link>
 
         {/* Navigation */}

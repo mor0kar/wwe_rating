@@ -4,13 +4,13 @@ import BottomNav from './components/BottomNav'
 import TopNav from './components/TopNav'
 
 export const metadata: Metadata = {
-  title: 'WWE Rater',
+  title: 'Squared Circle Ratings',
   description: 'Wöchentliche Show-Bewertungen für Foffi, Jan, Björn & Curry',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'WWE Rater',
+    title: 'Squared Circle',
   },
   icons: {
     apple: '/icons/icon.svg',
