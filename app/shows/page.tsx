@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getShowLogo } from '@/lib/showLogos'
+import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 
 type Show = {
   id: number
@@ -381,9 +382,14 @@ function ShowCard({
 // --- Main Page ----------------------------------------------------------
 
 export default function ShowsPage() {
+  const router = useRouter()
   const [shows, setShows] = useState<Show[]>([])
   const [filter, setFilter] = useState('Alle')
   const [loading, setLoading] = useState(true)
+
+  // Schlüssel (Typ|Datum) aller bereits angelegten Shows — filterunabhängig,
+  // damit der "Noch zu bewerten"-Überblick stimmt.
+  const [existingKeys, setExistingKeys] = useState<Set<string>>(new Set())
 
   function loadShows(f: string) {
     setLoading(true)
@@ -394,6 +400,25 @@ export default function ShowsPage() {
   }
 
   useEffect(() => { loadShows(filter) }, [filter])
+
+  // Alle Shows einmalig laden, um offene (gelaufene, nicht angelegte) Events zu ermitteln
+  useEffect(() => {
+    fetch('/api/shows?type=all')
+      .then(r => r.json())
+      .then((data: Show[]) => setExistingKeys(new Set(data.map(s => `${s.type}|${s.date}`))))
+      .catch(() => {})
+  }, [])
+
+  // Gelaufene Kalender-Events ohne angelegte Show → "noch zu bewerten"
+  const now = Date.now()
+  const pending = getUpcomingEvents().filter(
+    ev => eventInstant(ev).getTime() < now && !existingKeys.has(`${ev.type}|${ev.date}`)
+  )
+
+  function rateEvent(ev: CalendarEvent) {
+    const params = new URLSearchParams({ type: ev.type, date: ev.date, title: ev.title ?? '' })
+    router.push(`/shows/add?${params.toString()}`)
+  }
 
   function handleUpdated(updated: Show) {
     setShows(prev => prev.map(s => s.id === updated.id ? updated : s))
@@ -421,6 +446,46 @@ export default function ShowsPage() {
           <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>
         </div>
       </div>
+
+      {/* Noch zu bewerten — gelaufene Events ohne angelegte Show */}
+      {pending.length > 0 && (
+        <div className="max-w-6xl mx-auto px-4 mb-6">
+          <div className="bg-zinc-900 border border-red-900/50 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">Noch zu bewerten</h2>
+              <span className="text-xs text-zinc-500">({pending.length})</span>
+            </div>
+            <div className="space-y-2.5">
+              {pending.map((ev, i) => {
+                const logo = getShowLogo(ev.type, ev.title)
+                const dateStr = new Date(ev.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+                return (
+                  <div key={i} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {logo ? (
+                        <img src={logo} alt={ev.title || ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
+                      ) : (
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE[ev.type] || 'bg-zinc-800 text-zinc-300'}`}>
+                          {ev.type}
+                        </span>
+                      )}
+                      <span className="text-sm text-zinc-200 truncate">{ev.title || ev.type}</span>
+                      <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
+                    </div>
+                    <button
+                      onClick={() => rateEvent(ev)}
+                      className="shrink-0 text-xs bg-[#DC0000] hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wide transition-colors"
+                    >
+                      Bewerten
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter-Chips + Show-Liste */}
       <div className="max-w-6xl mx-auto px-4 pb-24 lg:pb-8">

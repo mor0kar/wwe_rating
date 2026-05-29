@@ -87,13 +87,13 @@ Nach jeder Iteration aktualisieren.
 ---
 
 ### [WWE-007] Upcoming Shows Kalender (DE)
-- **Status:** ⚪ Offen
+- **Status:** 🟢 Erledigt
 - **Priorität:** Mittel
 - **Agent:** frontend-specialist + backend-specialist
 - **Beschreibung:** Kalender/Liste kommender WWE-Events mit deutschen Zeiten — wann und um wie viel Uhr läuft welche Show in Deutschland
 - **Akzeptanzkriterium:** Seite `/upcoming` zeigt die nächsten WWE-Shows mit Datum, Uhrzeit (CET/CEST), Typ und ob sie bereits bewertet wurden
 - **Prüfmethode:** Seite aufrufen → aktuelle WWE-Events sichtbar mit DE-Zeiten
-- **Evidenz:** —
+- **Evidenz:** Commit 8da69f0 — Mai 2026. `lib/calendar.ts` mit zentraler `getUpcomingEvents()` + IANA-Zeitzonen; DST-sichere Umrechnung auf Europe/Berlin via `Intl` (`germanWatchTime`, inkl. Tagesversatz für US-Nachtshows). `/upcoming` zeigt Ortszeit + 🇩🇪 Live-Zeit. Bereits angelegte Shows werden als „Bewertet/Angelegt ✓" markiert (Abgleich Typ+Datum gegen `/api/shows`) → verhindert Doppel-Anlage. `npm run build` grün.
 
 ---
 
@@ -104,7 +104,52 @@ Nach jeder Iteration aktualisieren.
 - **Beschreibung:** Automatisches Anlegen von Shows basierend auf dem offiziellen WWE-Terminplan (z.B. via Web-Scraping oder iCal-Feed)
 - **Akzeptanzkriterium:** Neue Shows werden automatisch in die DB eingetragen sobald WWE sie ankündigt; kein manuelles Anlegen nötig für Standard-Shows (RAW montags, SmackDown freitags, PLEs)
 - **Prüfmethode:** Cron-Job läuft → neue Show erscheint automatisch in der App
-- **Evidenz:** —
+- **Evidenz:** — | **Recherche Mai 2026:** TheSportsDB (Liga 4444) liefert saubere UTC-Zeiten + Venue, aber die **kostenlose** Stufe kappt bei ~15 Events/Call → für Zukunfts-Termine **Premium-Key nötig** (Patreon ~3–5 $/Mo). Entscheidung vorerst: kuratierte Liste in `lib/calendar.ts`, Code ist API-ready (nur `getUpcomingEvents()` umbauen).
+
+---
+
+### [WWE-011] Rebranding → „Squared Circle Ratings"
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** „WWE Rater" überall durch „Squared Circle Ratings" ersetzen
+- **Akzeptanzkriterium:** Nav-Logo, Hero `/shows`, Login, Tab-Titel, PWA-Manifest tragen den neuen Namen
+- **Evidenz:** Commit 8da69f0 — Mai 2026. TopNav, Hero, Login, `layout.tsx`-Metadata, `manifest.ts`. `npm run build` grün.
+
+---
+
+### [WWE-012] NXT entfernen
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** NXT wird nicht bewertet → aus der UI nehmen
+- **Akzeptanzkriterium:** Kein NXT in Filter-Chips, Typ-Auswahl beim Eintragen und Stats-Auswertung
+- **Evidenz:** Commit 8da69f0 — Mai 2026. `FILTERS`, `TYPES`, `typeStats` bereinigt. `ShowType` erlaubt nur RAW/SmackDown/PLE/SNM.
+
+---
+
+### [WWE-013] Wertung auf Show-Detailseite anpassen
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Beim Klick auf eine Show direkt dort alle Wertungen bearbeiten (nicht nur unbewertete nachtragen)
+- **Akzeptanzkriterium:** Editor auf `/shows/[id]` mit allen Personen, vorbefüllt, „dabei"-Schalter (Curry sauber ausschließbar), DANHAUSEN-Bonus
+- **Evidenz:** Commit 8da69f0 — Mai 2026. `app/shows/[id]/RatingEditor.tsx` ersetzt `AddRatingSection`; speichert via `PATCH /api/shows/[id]`. `npm run build` grün.
+
+---
+
+### [WWE-014] PLE-Logos pro Event
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** PLEs mit echtem Franchise-Logo statt generischem „PLE"-Badge anzeigen
+- **Akzeptanzkriterium:** Logo wird anhand des Titels erkannt (WrestleMania, SummerSlam, Royal Rumble, Elimination Chamber, MITB, Backlash, Survivor Series); Fallback auf Badge
+- **Evidenz:** Commit 8d31207 — Mai 2026. `lib/showLogos.ts` mit `getShowLogo(type, title)`, genutzt in `/shows`, `/shows/[id]`, `/stats`, `/upcoming`. Logos von Wikimedia/Wikipedia (alle HTTP 200 verifiziert). `npm run build` grün.
+
+---
+
+### [WWE-015] Next.js-16-Build-Fix
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch
+- **Beschreibung:** Vercel-Build scheiterte unter Next.js 16 am Prerendering von `/shows/add` (`useSearchParams` ohne Suspense)
+- **Akzeptanzkriterium:** Build läuft grün durch
+- **Evidenz:** Commit c7dfbff — Mai 2026. `AddShowForm` in `<Suspense>` gewrappt. `npm run build` grün (12/12 Seiten).
 
 ---
 
@@ -119,11 +164,44 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-016] Noch-zu-bewerten Überblick
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Agent:** frontend-specialist
+- **Beschreibung:** Zentrale Ansicht/Filter, welche bereits gelaufenen Shows noch nicht (oder nicht von allen) bewertet wurden — eine echte To-Do-Liste fürs Bewerten, ergänzend zur Kalender-Markierung
+- **Akzeptanzkriterium:** Sichtbarer Hinweis (z.B. Filter „offen" auf `/shows` oder Sektion auf der Startseite), der gelaufene, noch unbewertete Events listet; optional pro Person „fehlt noch"
+- **Prüfmethode:** Show ohne (vollständige) Bewertung anlegen → erscheint im „offen"-Überblick; nach dem Bewerten verschwindet sie
+- **Evidenz:** Mai 2026. „Noch zu bewerten"-Sektion oben auf `/shows`: listet gelaufene Kalender-Events (`eventInstant(ev) < now`) ohne angelegte Show (Abgleich Typ+Datum gegen alle Shows, filterunabhängig). Direkter „Bewerten"-Button → vorbefülltes `/shows/add`. `npm run build` grün. Hinweis: Event-Ebene umgesetzt; „pro Person fehlt noch" als mögliche Erweiterung offen.
+
+---
+
+### [WWE-017] Score-Verlauf als Chart
+- **Status:** ⚪ Offen
+- **Priorität:** Niedrig
+- **Agent:** frontend-specialist
+- **Beschreibung:** Trend der Bewertungen über die Zeit (pro Person und/oder Show-Typ) als kleine Kurve auf der Stats-Seite — kein externes Chart-Lib, reines SVG
+- **Akzeptanzkriterium:** Auf `/stats` eine Verlaufs-Grafik (z.B. Ø pro Woche/Show), lesbar im Dark Mode, mobil tauglich
+- **Prüfmethode:** Stats-Seite aufrufen → Kurve zeigt Entwicklung der Schnitte über die Saison
+- **Evidenz:** —
+
+---
+
+### [WWE-018] middleware.ts → proxy.ts (Next-16-Cleanup)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Agent:** backend-specialist
+- **Beschreibung:** Next.js 16 hat die `middleware`-Konvention zugunsten von `proxy` deprecated → Datei umbenennen, um die Build-Warnung zu beseitigen
+- **Akzeptanzkriterium:** PIN-Schutz funktioniert unverändert, Build wirft keine middleware-Deprecation-Warnung mehr
+- **Prüfmethode:** `npm run build` → keine Warnung; eingeloggt/ausgeloggt testen → Schutz greift
+- **Evidenz:** Mai 2026. `middleware.ts` → `proxy.ts`, Funktion `middleware` → `proxy` (gemäß Next-16-Doku), `config`/matcher unverändert. `npm run build` ohne Deprecation-Warnung.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
 - [ ] Kommentar-Feld pro Bewertung ("was war gut/schlecht") — Priorität: Niedrig
-- [ ] Score-Verlauf als Chart (Woche für Woche) — Priorität: Niedrig
+- [ ] DANHAUSEN Hall of Fame — Ansicht aller ⚡>10-Momente — Priorität: Niedrig
 
 ---
 
