@@ -11,6 +11,7 @@ type Show = {
   type: string
   date: string
   title: string
+  comment?: string | null
   ratings: Record<string, number>
   notes: Record<string, string | null>
 }
@@ -39,6 +40,7 @@ function EditCard({
   const [type, setType] = useState(show.type)
   const [date, setDate] = useState(show.date)
   const [title, setTitle] = useState(show.title)
+  const [comment, setComment] = useState(show.comment ?? '')
   const [baseRatings, setBaseRatings] = useState<Record<string, number>>(() => {
     return { ...show.ratings }
   })
@@ -77,7 +79,7 @@ function EditCard({
         effectiveNotes[p] = notes[p]
       }
     })
-    await onSave({ type, date, title, ratings: effectiveRatings, notes: effectiveNotes })
+    await onSave({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes })
     setSaving(false)
   }
 
@@ -126,6 +128,18 @@ function EditCard({
         />
       </div>
 
+      {/* Kommentar / Spitzname */}
+      <div>
+        <label className="text-xs text-zinc-500 mb-1.5 block">Kommentar</label>
+        <input
+          type="text"
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          placeholder='z.B. "Die Stuhl-Match-Folge"'
+          className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-zinc-50 outline-none focus:border-zinc-500 placeholder:text-zinc-600"
+        />
+      </div>
+
       {/* Ratings */}
       <div>
         <label className="text-xs text-zinc-500 mb-2 block">Bewertungen</label>
@@ -138,19 +152,35 @@ function EditCard({
               <div key={p} className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-zinc-100">{p}</span>
-                  <span className={`text-base font-semibold ${scoreColor(total)}`}>
-                    {total > 10 ? `⚡${fmt(total)}` : fmt(total)}
+                  <span className={`text-base font-semibold ${
+                    danhausen[p] ? 'text-purple-400 font-bold' : scoreColor(total)
+                  }`}>
+                    {danhausen[p] ? `⚡${fmt(total)}` : fmt(total)}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={0.01}
-                  value={base}
-                  onChange={e => setBaseRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
-                  className="w-full accent-zinc-100"
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    step={0.5}
+                    value={Math.min(base, 10)}
+                    onChange={e => setBaseRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
+                    className="flex-1 accent-zinc-100"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.5}
+                    value={Math.min(base, 10)}
+                    onChange={e => {
+                      const v = parseFloat(e.target.value)
+                      if (!isNaN(v)) setBaseRatings(r => ({ ...r, [p]: Math.min(10, Math.max(0, v)) }))
+                    }}
+                    className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-50 outline-none focus:border-zinc-500 text-center"
+                  />
+                </div>
                 <div className="flex justify-between text-xs text-zinc-600 mt-0.5">
                   <span>0</span><span>5</span><span>10</span>
                 </div>
@@ -172,9 +202,9 @@ function EditCard({
                       <span className="text-xs text-zinc-500">Bonus:</span>
                       <input
                         type="number"
-                        min={0.01}
-                        max={5.0}
-                        step={0.01}
+                        min={0}
+                        max={5}
+                        step={0.1}
                         value={bonuses[p] ?? 0}
                         onChange={e => setBonuses(b => ({ ...b, [p]: parseFloat(e.target.value) || 0 }))}
                         className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 text-center"
@@ -288,6 +318,11 @@ function ShowCard({
             <span className="block font-heading text-base font-semibold text-zinc-50 truncate uppercase tracking-wide">
               {show.title || show.type}
             </span>
+            {show.comment && show.comment.trim() !== '' && (
+              <p className="text-xs text-zinc-300 italic mt-0.5 truncate" title={show.comment}>
+                &ldquo;{show.comment}&rdquo;
+              </p>
+            )}
             <p className="text-xs text-zinc-500 mt-0.5">{dateStr}</p>
           </div>
           <div className="flex items-start gap-1 shrink-0">
@@ -307,14 +342,29 @@ function ShowCard({
 
         {/* Ratings */}
         <div className="flex flex-wrap gap-1.5">
-          {persons.map(p => (
-            <div key={p} className="flex items-center gap-1.5 bg-zinc-800/80 rounded-full pl-2.5 pr-2 py-1">
-              <span className="text-xs text-zinc-400">{p}</span>
-              <span className={`text-sm font-heading font-semibold tabular-nums ${scoreColor(show.ratings[p])}`}>
-                {show.ratings[p] > 10 ? `⚡${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
-              </span>
-            </div>
-          ))}
+          {persons.map(p => {
+            const note = show.notes?.[p]
+            const isDanhausen = !!(note && note.trim() !== '')
+            return (
+              <div
+                key={p}
+                className={`flex items-center gap-1.5 rounded-full pl-2.5 pr-2 py-1 transition-colors ${
+                  isDanhausen
+                    ? 'bg-purple-950/60 ring-1 ring-purple-500/40 cursor-help'
+                    : 'bg-zinc-800/80'
+                }`}
+                title={isDanhausen ? `⚡ ${note}` : undefined}
+                onClick={isDanhausen ? e => e.stopPropagation() : undefined}
+              >
+                <span className={`text-xs ${isDanhausen ? 'text-purple-300' : 'text-zinc-400'}`}>{p}</span>
+                <span className={`text-sm font-heading font-semibold tabular-nums ${
+                  isDanhausen ? 'text-purple-400' : scoreColor(show.ratings[p])
+                }`}>
+                  {isDanhausen ? `⚡${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
 

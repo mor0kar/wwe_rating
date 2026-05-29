@@ -10,14 +10,16 @@ type Props = {
   type: string
   date: string
   title: string
+  comment?: string
   persons: string[]          // alle Personen
   existing: Existing          // vorhandene Bewertungen
 }
 
-export default function RatingEditor({ showId, type, date, title, persons, existing }: Props) {
+export default function RatingEditor({ showId, type, date, title, comment: initialComment, persons, existing }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [comment, setComment] = useState(initialComment ?? '')
 
   // "dabei": vorhandene Bewertungen sind aktiv, fehlende standardmäßig aus
   const [active, setActive] = useState<Record<string, boolean>>(() =>
@@ -51,7 +53,7 @@ export default function RatingEditor({ showId, type, date, title, persons, exist
     await fetch(`/api/shows/${showId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, date, title, ratings, notes: noteMap }),
+      body: JSON.stringify({ type, date, title, comment, ratings, notes: noteMap }),
     })
     setSaving(false)
     setOpen(false)
@@ -75,6 +77,18 @@ export default function RatingEditor({ showId, type, date, title, persons, exist
     <div className="mt-4">
       <h2 className="text-base font-semibold text-zinc-50 mb-3">Bewertungen bearbeiten</h2>
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-4">
+        {/* Kommentar / Spitzname für die Folge */}
+        <div>
+          <label className="text-xs text-zinc-500 mb-1.5 block">Kommentar (optional, z.B. &quot;Die Stuhl-Match-Folge&quot;)</label>
+          <input
+            type="text"
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="So nennen wir die Folge intern"
+            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-50 outline-none focus:border-red-600 placeholder:text-zinc-600"
+          />
+        </div>
+
         {persons.map(p => {
           const isOn = active[p] ?? false
           const b = base[p] ?? 0
@@ -90,8 +104,10 @@ export default function RatingEditor({ showId, type, date, title, persons, exist
                 <span className="text-sm font-medium text-zinc-100">{p}</span>
                 <div className="flex items-center gap-3">
                   {isOn && (
-                    <span className={`text-base font-semibold ${scoreColor(total)}`}>
-                      {total > 10 ? `⚡${fmt(total)}` : fmt(total)}
+                    <span className={`text-base font-semibold ${
+                      danhausen[p] ? 'text-purple-400 font-bold' : scoreColor(total)
+                    }`}>
+                      {danhausen[p] ? `⚡${fmt(total)}` : fmt(total)}
                     </span>
                   )}
                   <label className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -108,15 +124,29 @@ export default function RatingEditor({ showId, type, date, title, persons, exist
 
               {isOn && (
                 <div className="space-y-1.5">
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.01}
-                    value={Math.min(b, 10)}
-                    onChange={e => setBase(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
-                    className="w-full accent-zinc-100"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={10}
+                      step={0.5}
+                      value={Math.min(b, 10)}
+                      onChange={e => setBase(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
+                      className="flex-1 accent-zinc-100"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={0.5}
+                      value={Math.min(b, 10)}
+                      onChange={e => {
+                        const v = parseFloat(e.target.value)
+                        if (!isNaN(v)) setBase(r => ({ ...r, [p]: Math.min(10, Math.max(0, v)) }))
+                      }}
+                      className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-50 outline-none focus:border-zinc-500 text-center"
+                    />
+                  </div>
                   <div className="flex justify-between text-xs text-zinc-600">
                     <span>0</span><span>5</span><span>10</span>
                   </div>
@@ -138,9 +168,9 @@ export default function RatingEditor({ showId, type, date, title, persons, exist
                         <span className="text-xs text-zinc-500">Bonus:</span>
                         <input
                           type="number"
-                          min={0.01}
-                          max={5.0}
-                          step={0.01}
+                          min={0}
+                          max={5}
+                          step={0.1}
                           value={bonus[p] ?? 0}
                           onChange={e => setBonus(bn => ({ ...bn, [p]: parseFloat(e.target.value) || 0 }))}
                           className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 text-center"

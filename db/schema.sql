@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS shows (
   type VARCHAR(20) NOT NULL CHECK (type IN ('RAW','SmackDown','PLE','SNM','NXT')),
   date DATE NOT NULL,
   title VARCHAR(200) DEFAULT '',
+  comment VARCHAR(300) DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS ratings (
   show_id INTEGER NOT NULL REFERENCES shows(id) ON DELETE CASCADE,
   person_name VARCHAR(100) NOT NULL,
   score DECIMAL(4,2) NOT NULL,
+  note TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(show_id, person_name)
 );

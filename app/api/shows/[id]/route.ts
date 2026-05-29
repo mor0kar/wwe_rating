@@ -14,21 +14,24 @@ export async function PATCH(
     type,
     date,
     title,
+    comment,
     ratings,
     notes,
   }: {
     type: string
     date: string
     title?: string
+    comment?: string
     ratings: Record<string, number>
     notes?: Record<string, string>
   } = await req.json()
 
   await sql`
     UPDATE shows
-    SET type  = ${type},
-        date  = ${date},
-        title = ${title ?? ''}
+    SET type    = ${type},
+        date    = ${date},
+        title   = ${title ?? ''},
+        comment = ${comment ?? ''}
     WHERE id = ${showId}
   `
 

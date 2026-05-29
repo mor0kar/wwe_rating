@@ -12,6 +12,7 @@ function AddShowForm() {
   const [type, setType] = useState(params.get('type') ?? 'RAW')
   const [date, setDate] = useState(params.get('date') ?? new Date().toISOString().split('T')[0])
   const [title, setTitle] = useState(params.get('title') ?? '')
+  const [comment, setComment] = useState('')
   const [ratings, setRatings] = useState<Record<string, number>>({})
   const [active, setActive] = useState<Record<string, boolean>>({})
   const [danhausen, setDanhausen] = useState<Record<string, boolean>>({})
@@ -44,7 +45,7 @@ function AddShowForm() {
     await fetch('/api/shows', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, date, title, ratings: effectiveRatings, notes: effectiveNotes }),
+      body: JSON.stringify({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes }),
     })
     router.push('/shows')
   }
@@ -105,6 +106,18 @@ function AddShowForm() {
           />
         </div>
 
+        {/* Kommentar / Spitzname für die Folge */}
+        <div>
+          <label className="text-xs text-zinc-500 mb-1.5 block">Kommentar (optional, z.B. &quot;Die Stuhl-Match-Folge&quot;)</label>
+          <input
+            type="text"
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="So nennen wir die Folge intern"
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-50 outline-none focus:border-red-600 placeholder:text-zinc-600"
+          />
+        </div>
+
         {/* Bewertungen */}
         <div>
           <label className="text-xs text-zinc-500 mb-3 block">Bewertungen</label>
@@ -125,11 +138,11 @@ function AddShowForm() {
                     <div className="flex items-center gap-3">
                       {isActive && (
                         <span className={`text-lg font-semibold ${
-                          total > 10 ? 'text-purple-400 font-bold' :
+                          danhausen[p] ? 'text-purple-400 font-bold' :
                           total >= 7 ? 'text-green-400' :
                           total >= 4 ? 'text-amber-500' : 'text-red-400'
                         }`}>
-                          {total > 10 ? `⚡${fmt(total)}` : fmt(total)}
+                          {danhausen[p] ? `⚡${fmt(total)}` : fmt(total)}
                         </span>
                       )}
                       <label className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -146,15 +159,29 @@ function AddShowForm() {
 
                   {isActive && (
                     <div className="space-y-1.5">
-                      <input
-                        type="range"
-                        min={0}
-                        max={10}
-                        step={0.01}
-                        value={base}
-                        onChange={e => setRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
-                        className="w-full accent-zinc-100"
-                      />
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={0}
+                          max={10}
+                          step={0.5}
+                          value={base}
+                          onChange={e => setRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
+                          className="flex-1 accent-zinc-100"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={0.5}
+                          value={base}
+                          onChange={e => {
+                            const v = parseFloat(e.target.value)
+                            if (!isNaN(v)) setRatings(r => ({ ...r, [p]: Math.min(10, Math.max(0, v)) }))
+                          }}
+                          className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-50 outline-none focus:border-zinc-500 text-center"
+                        />
+                      </div>
                       <div className="flex justify-between text-xs text-zinc-600">
                         <span>0</span><span>5</span><span>10</span>
                       </div>
@@ -176,9 +203,9 @@ function AddShowForm() {
                             <span className="text-xs text-zinc-500">Bonus:</span>
                             <input
                               type="number"
-                              min={0.01}
-                              max={5.0}
-                              step={0.01}
+                              min={0}
+                              max={5}
+                              step={0.1}
                               value={bonuses[p] ?? 0}
                               onChange={e => setBonuses(b => ({ ...b, [p]: parseFloat(e.target.value) || 0 }))}
                               className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 text-center"

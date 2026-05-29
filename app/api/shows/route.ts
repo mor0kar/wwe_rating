@@ -33,19 +33,21 @@ export async function POST(req: NextRequest) {
     type,
     date,
     title,
+    comment,
     ratings,
     notes,
   }: {
     type: string
     date: string
     title?: string
+    comment?: string
     ratings: Record<string, number>
     notes?: Record<string, string>
   } = await req.json()
 
   const [show] = await sql`
-    INSERT INTO shows (type, date, title)
-    VALUES (${type}, ${date}, ${title || ''})
+    INSERT INTO shows (type, date, title, comment)
+    VALUES (${type}, ${date}, ${title || ''}, ${comment || ''})
     RETURNING *
   `
 

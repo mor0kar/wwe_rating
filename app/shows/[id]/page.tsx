@@ -8,7 +8,7 @@ import ScoreRing from '@/app/components/ScoreRing'
 
 export const dynamic = 'force-dynamic'
 
-type ShowRow = { id: number; type: string; date: string; title: string }
+type ShowRow = { id: number; type: string; date: string; title: string; comment: string | null }
 type RatingRow = { show_id: number; person_name: string; score: number; note: string | null }
 type PersonRow = { name: string }
 
@@ -71,6 +71,9 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
             <h1 className="font-heading text-2xl font-bold uppercase tracking-wide text-zinc-50 leading-tight">
               {show.title || show.type}
             </h1>
+            {show.comment && show.comment.trim() !== '' && (
+              <p className="text-sm text-zinc-300 italic mt-1">&ldquo;{show.comment}&rdquo;</p>
+            )}
             <p className="text-sm text-zinc-500 mt-1">{dateStr}</p>
           </div>
           {avg !== null && (
@@ -92,16 +95,17 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4 space-y-3">
           {ratings.map(r => {
             const score = Number(r.score)
+            const isDanhausen = !!(r.note && r.note.trim() !== '')
             return (
               <div key={r.person_name}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-zinc-100">{r.person_name}</span>
-                  <span className={`text-base font-semibold ${scoreColor(score)}`}>
-                    {scoreLabel(score)}
+                  <span className={`text-base font-semibold ${isDanhausen ? 'text-purple-400 font-bold' : scoreColor(score)}`}>
+                    {isDanhausen ? `⚡${scoreLabel(score).replace('⚡', '')}` : scoreLabel(score)}
                   </span>
                 </div>
-                {r.note && r.note.trim() !== '' && (
-                  <p className="text-xs text-zinc-500 italic mt-0.5">{r.note}</p>
+                {isDanhausen && (
+                  <p className="text-xs text-purple-300 italic mt-0.5">⚡ {r.note}</p>
                 )}
               </div>
             )
@@ -163,6 +167,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         type={show.type}
         date={show.date}
         title={show.title ?? ''}
+        comment={show.comment ?? ''}
         persons={allPersons.map(p => p.name)}
         existing={existing}
       />
