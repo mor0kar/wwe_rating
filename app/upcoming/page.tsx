@@ -7,6 +7,7 @@ import {
   localStartTime,
   type CalendarEvent,
 } from '@/lib/calendar'
+import { getShowLogo } from '@/lib/showLogos'
 
 const BADGE: Record<string, string> = {
   RAW: 'bg-red-950 text-red-400',
@@ -20,12 +21,6 @@ const BORDER_ACCENT: Record<string, string> = {
   SmackDown: 'border-l-blue-600',
   PLE: 'border-l-purple-600',
   SNM: 'border-l-amber-500',
-}
-
-const LOGOS: Record<string, string> = {
-  RAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/WWE_RAW_Logo_2025.svg/3840px-WWE_RAW_Logo_2025.svg.png',
-  SmackDown: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/WWE_SmackDown_%282024%29_Logo.svg/960px-WWE_SmackDown_%282024%29_Logo.svg.png',
-  SNM: 'https://www.wwe.com/f/styles/wwe_large/public/all/2024/12/SNME-presale-reg-logo--5b3c37e662fa172d6cc9b7c74d699987--fa61ee9da3b54c8c4a052c2799aa0f87.png',
 }
 
 const MONTH_NAMES: Record<number, string> = {
@@ -141,8 +136,8 @@ export default function UpcomingPage() {
                       {/* Show-Info */}
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          {LOGOS[ev.type] ? (
-                            <img src={LOGOS[ev.type]} alt={ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
+                          {getShowLogo(ev.type, ev.title) ? (
+                            <img src={getShowLogo(ev.type, ev.title)!} alt={ev.title || ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
                           ) : (
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${BADGE[ev.type] || 'bg-zinc-800 text-zinc-300'}`}>
                               {ev.type}

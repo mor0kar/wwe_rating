@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getShowLogo } from '@/lib/showLogos'
 
 type Show = {
   id: number
@@ -19,13 +20,6 @@ const BADGE: Record<string, string> = {
   PLE: 'bg-purple-950 text-purple-400',
   SNM: 'bg-amber-950 text-amber-400',
   NXT: 'bg-green-950 text-green-400',
-}
-
-const LOGOS: Record<string, string> = {
-  RAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/WWE_RAW_Logo_2025.svg/3840px-WWE_RAW_Logo_2025.svg.png',
-  SmackDown: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/WWE_SmackDown_%282024%29_Logo.svg/960px-WWE_SmackDown_%282024%29_Logo.svg.png',
-  NXT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/WWE_NXT_2024_Logo.svg/3840px-WWE_NXT_2024_Logo.svg.png',
-  SNM: 'https://www.wwe.com/f/styles/wwe_large/public/all/2024/12/SNME-presale-reg-logo--5b3c37e662fa172d6cc9b7c74d699987--fa61ee9da3b54c8c4a052c2799aa0f87.png',
 }
 
 function fmt(n: number): string {
@@ -305,8 +299,8 @@ function ShowCard({
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            {LOGOS[show.type] ? (
-              <img src={LOGOS[show.type]} alt={show.type} className="h-5 object-contain shrink-0" loading="lazy" />
+            {getShowLogo(show.type, show.title) ? (
+              <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-5 object-contain shrink-0" loading="lazy" />
             ) : (
               <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
                 {show.type}

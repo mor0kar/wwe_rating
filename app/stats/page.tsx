@@ -1,4 +1,5 @@
 import sql from '@/lib/db'
+import { getShowLogo } from '@/lib/showLogos'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,16 +67,10 @@ const BADGE: Record<string, string> = {
   NXT: 'bg-green-950 text-green-400',
 }
 
-const LOGOS: Record<string, string> = {
-  RAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/WWE_RAW_Logo_2025.svg/3840px-WWE_RAW_Logo_2025.svg.png',
-  SmackDown: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/WWE_SmackDown_%282024%29_Logo.svg/960px-WWE_SmackDown_%282024%29_Logo.svg.png',
-  NXT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/WWE_NXT_2024_Logo.svg/3840px-WWE_NXT_2024_Logo.svg.png',
-  SNM: 'https://www.wwe.com/f/styles/wwe_large/public/all/2024/12/SNME-presale-reg-logo--5b3c37e662fa172d6cc9b7c74d699987--fa61ee9da3b54c8c4a052c2799aa0f87.png',
-}
-
-function showTypeBadge(type: string, className = 'h-4') {
-  if (LOGOS[type]) {
-    return <img src={LOGOS[type]} alt={type} className={`${className} object-contain shrink-0`} loading="lazy" />
+function showTypeBadge(type: string, className = 'h-4', title?: string) {
+  const logo = getShowLogo(type, title)
+  if (logo) {
+    return <img src={logo} alt={title || type} className={`${className} object-contain shrink-0`} loading="lazy" />
   }
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[type] || 'bg-zinc-800 text-zinc-300'}`}>
@@ -218,7 +213,7 @@ export default async function StatsPage() {
                       <span className={`text-sm w-5 text-center ${rankBadge(i)}`}>{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {showTypeBadge(s.type, 'h-3.5')}
+                          {showTypeBadge(s.type, 'h-3.5', s.title)}
                           <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
                           <span className="text-xs text-zinc-500">{dateStr}</span>
                         </div>
@@ -251,7 +246,7 @@ export default async function StatsPage() {
                       <span className="text-sm w-5 text-center text-zinc-500">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {showTypeBadge(s.type, 'h-3.5')}
+                          {showTypeBadge(s.type, 'h-3.5', s.title)}
                           <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
                           <span className="text-xs text-zinc-500">{dateStr}</span>
                         </div>
