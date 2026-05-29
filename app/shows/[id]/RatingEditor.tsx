@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { fmt, scoreColor } from '@/lib/score'
 
 type Existing = Record<string, { score: number; note: string | null }>
 
@@ -11,18 +12,6 @@ type Props = {
   title: string
   persons: string[]          // alle Personen
   existing: Existing          // vorhandene Bewertungen
-}
-
-function fmt(n: number): string {
-  const s = parseFloat(n.toFixed(2)).toString()
-  return s.includes('.') ? s : s + '.0'
-}
-
-function scoreColor(s: number) {
-  if (s > 10) return 'text-purple-400 font-bold'
-  if (s >= 7) return 'text-green-400'
-  if (s >= 4) return 'text-amber-500'
-  return 'text-red-400'
 }
 
 export default function RatingEditor({ showId, type, date, title, persons, existing }: Props) {

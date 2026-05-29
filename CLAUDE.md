@@ -35,22 +35,34 @@ wwe-rater/
 │   ├── api/
 │   │   ├── auth/route.ts        ← PIN-Login Endpoint
 │   │   ├── shows/route.ts       ← Shows GET + POST
+│   │   ├── shows/[id]/route.ts  ← Show PATCH/POST/DELETE + Einzel-Rating
 │   │   └── persons/route.ts     ← Personen GET/POST/DELETE
+│   ├── components/
+│   │   ├── TopNav.tsx           ← Desktop-Navigation (Glas)
+│   │   ├── BottomNav.tsx        ← Mobile Tab-Bar (Glas)
+│   │   └── ScoreRing.tsx        ← SVG-Score-Gauge
 │   ├── login/page.tsx           ← PIN-Eingabe (public)
 │   ├── shows/
-│   │   ├── page.tsx             ← Show-Liste (Client Component)
-│   │   └── add/page.tsx         ← Neue Show erfassen
-│   ├── stats/page.tsx           ← Statistiken (Server Component)
+│   │   ├── page.tsx             ← Show-Liste + "Noch zu bewerten" (Client)
+│   │   ├── add/page.tsx         ← Neue Show erfassen
+│   │   └── [id]/page.tsx        ← Show-Detail + RatingEditor.tsx
+│   ├── stats/page.tsx           ← Statistiken + Score-Chart (Server Component)
+│   ├── upcoming/page.tsx        ← Kalender mit DE-Zeit (Client)
+│   ├── settings/page.tsx        ← Personen-Verwaltung (Client)
+│   ├── manifest.ts              ← PWA-Manifest
 │   ├── layout.tsx
 │   ├── page.tsx                 ← Redirect → /shows
 │   └── globals.css
 ├── lib/
-│   ├── db.ts                    ← Neon SQL Client (einzige DB-Verbindung)
-│   └── auth.ts                  ← PIN-Konstanten, checkPin()
-├── middleware.ts                 ← PIN-Schutz für alle Routen
+│   ├── db.ts                    ← postgres.js Client (Supabase, einzige DB-Verbindung)
+│   ├── auth.ts                  ← PIN-Konstanten, checkPin()
+│   ├── calendar.ts              ← getUpcomingEvents() + DE-Zeit-Umrechnung
+│   ├── score.ts                 ← fmt / scoreColor / scoreHex / scoreLabel
+│   └── showStyle.ts             ← getShowLogo + BADGE / BORDER_ACCENT / TINT
+├── proxy.ts                      ← PIN-Schutz für alle Routen (Next.js 16; ex middleware.ts)
 ├── db/
-│   ├── schema.sql               ← DB-Schema (in Neon SQL Editor ausführen)
-│   └── seed.js                  ← Einmaliger Import der 48 Excel-Shows
+│   ├── schema.sql               ← DB-Schema (im Supabase SQL Editor ausführen)
+│   └── seed.js                  ← Einmaliger Import der Excel-Shows
 └── .claude/
     └── agents/                  ← orchestrator, planner, implementer,
                                     frontend-specialist, backend-specialist,
@@ -117,7 +129,7 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 - Build Command: `next build`
 - Output Dir: `.next`
 - Node Version: 20
-- Env Vars in Vercel: `DATABASE_URL`, `APP_PIN`
+- Env Vars in Vercel: `POSTGRES_URL`, `APP_PIN`
 
 ---
 
@@ -141,9 +153,9 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 
 ## Häufige Probleme & Fixes
 
-### Neon-Verbindung schlägt fehl
-→ `DATABASE_URL` muss Pooler-Hostname sein und `pgbouncer=true&connect_timeout=15` enthalten
-→ `channel_binding=require` entfernen — verursacht stille Fehler
+### DB-Verbindung schlägt fehl
+→ `POSTGRES_URL` muss die Supabase-Pooler-URL sein (Port 6543, `pgbouncer=true`)
+→ `lib/db.ts` nutzt `max: 1` + Custom-DATE-Parser (DATE bleibt als `YYYY-MM-DD`-String)
 
 ### Tailwind-Klassen werden nicht angewendet
 → Tailwind v4: kein `tailwind.config.ts`, Konfiguration via `globals.css`
@@ -160,13 +172,20 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 
 ## Roadmap
 
+Detaillierter Stand: siehe `TODOS.md`.
+
 - [x] Projekt-Scaffold + Agent-Infrastruktur
-- [ ] Initialer Deployment-Setup (WWE-001)
-- [ ] Show bearbeiten / löschen (WWE-002)
-- [ ] Personen-Verwaltung UI (WWE-003)
-- [ ] Show-Detail-Ansicht (WWE-004)
-- [ ] PWA / "Add to Homescreen"
-- [ ] Score-Verlauf als Chart
+- [x] Deployment-Setup (WWE-001)
+- [x] Show bearbeiten / löschen (WWE-002)
+- [x] Personen-Verwaltung UI (WWE-003)
+- [x] Show-Detail-Ansicht + Wertung anpassen (WWE-004, WWE-013)
+- [x] PWA / "Add to Homescreen" (WWE-005)
+- [x] UI Overhaul + Display-Font (WWE-006, WWE-019)
+- [x] Kalender mit DE-Zeit (WWE-007)
+- [x] Rebranding "Squared Circle Ratings" + NXT raus (WWE-011, WWE-012)
+- [x] PLE-Logos (WWE-014)
+- [x] Score-Verlauf als Chart (WWE-017)
+- [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---
 

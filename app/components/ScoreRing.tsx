@@ -1,17 +1,6 @@
 // Score als Ring-Gauge (reines SVG). Funktioniert in Server- & Client-Components.
 // Ring füllt sich bis 10; Scores >10 (DANHAUSEN) füllen voll + Lila-Glow.
-
-function fmt(n: number): string {
-  const s = parseFloat(n.toFixed(2)).toString()
-  return s.includes('.') ? s : s + '.0'
-}
-
-function scoreHex(s: number) {
-  if (s > 10) return '#c084fc'
-  if (s >= 7) return '#4ade80'
-  if (s >= 4) return '#fbbf24'
-  return '#f87171'
-}
+import { fmt, scoreHex } from '@/lib/score'
 
 export default function ScoreRing({
   value,

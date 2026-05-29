@@ -7,21 +7,7 @@ import {
   localStartTime,
   type CalendarEvent,
 } from '@/lib/calendar'
-import { getShowLogo } from '@/lib/showLogos'
-
-const BADGE: Record<string, string> = {
-  RAW: 'bg-red-950 text-red-400',
-  SmackDown: 'bg-blue-950 text-blue-400',
-  PLE: 'bg-purple-950 text-purple-400',
-  SNM: 'bg-amber-950 text-amber-400',
-}
-
-const BORDER_ACCENT: Record<string, string> = {
-  RAW: 'border-l-red-600',
-  SmackDown: 'border-l-blue-600',
-  PLE: 'border-l-purple-600',
-  SNM: 'border-l-amber-500',
-}
+import { getShowLogo, BADGE, BORDER_ACCENT } from '@/lib/showStyle'
 
 const MONTH_NAMES: Record<number, string> = {
   1: 'Januar', 2: 'Februar', 3: 'März', 4: 'April',

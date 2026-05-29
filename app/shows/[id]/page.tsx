@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import sql from '@/lib/db'
 import RatingEditor from './RatingEditor'
-import { getShowLogo } from '@/lib/showLogos'
+import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
+import { scoreColor, scoreLabel } from '@/lib/score'
 import ScoreRing from '@/app/components/ScoreRing'
 
 export const dynamic = 'force-dynamic'
@@ -10,46 +11,6 @@ export const dynamic = 'force-dynamic'
 type ShowRow = { id: number; type: string; date: string; title: string }
 type RatingRow = { show_id: number; person_name: string; score: number; note: string | null }
 type PersonRow = { name: string }
-
-const BADGE: Record<string, string> = {
-  RAW: 'bg-red-950 text-red-400',
-  SmackDown: 'bg-blue-950 text-blue-400',
-  PLE: 'bg-purple-950 text-purple-400',
-  SNM: 'bg-amber-950 text-amber-400',
-  NXT: 'bg-green-950 text-green-400',
-}
-
-const BORDER_ACCENT: Record<string, string> = {
-  RAW: 'border-l-red-600',
-  SmackDown: 'border-l-blue-600',
-  PLE: 'border-l-purple-600',
-  SNM: 'border-l-amber-500',
-  NXT: 'border-l-green-600',
-}
-
-const TINT: Record<string, string> = {
-  RAW: 'card-tint-raw',
-  SmackDown: 'card-tint-sd',
-  PLE: 'card-tint-ple',
-  SNM: 'card-tint-snm',
-}
-
-function fmt(n: number): string {
-  const s = parseFloat(n.toFixed(2)).toString()
-  return s.includes('.') ? s : s + '.0'
-}
-
-function scoreColor(s: number) {
-  if (s > 10) return 'text-purple-400 font-bold'
-  if (s >= 7) return 'text-green-400'
-  if (s >= 4) return 'text-amber-500'
-  return 'text-red-400'
-}
-
-function scoreLabel(s: number) {
-  if (s > 10) return `⚡${fmt(s)}`
-  return fmt(s)
-}
 
 export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

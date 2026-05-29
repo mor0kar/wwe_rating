@@ -1,13 +1,9 @@
 'use client'
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { fmt } from '@/lib/score'
 
 const TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
-
-function fmt(n: number): string {
-  const s = parseFloat(n.toFixed(2)).toString()
-  return s.includes('.') ? s : s + '.0'
-}
 
 function AddShowForm() {
   const router = useRouter()

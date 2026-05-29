@@ -1,7 +1,9 @@
-// lib/showLogos.ts
-// Zentrale Logo-Auflösung für Show-Typen.
-// Wöchentliche Shows haben ein festes Logo; PLEs werden anhand des
-// Titels (z.B. "SummerSlam", "WrestleMania") auf das Franchise-Logo gemappt.
+// lib/showStyle.ts
+// Zentrale visuelle Zuordnung pro Show-Typ: Logo, Badge, Akzent-Border, Tönung.
+
+// --- Logos -------------------------------------------------------------
+// Wöchentliche Shows haben ein festes Logo; PLEs werden anhand des Titels
+// (z.B. "SummerSlam", "WrestleMania") auf das Franchise-Logo gemappt.
 // Alle Logos werden direkt von Wikimedia/Wikipedia bzw. wwe.com geladen.
 
 const WEEKLY_LOGOS: Record<string, string> = {
@@ -12,7 +14,6 @@ const WEEKLY_LOGOS: Record<string, string> = {
 }
 
 // PLE-Franchise-Logos. match = Suchbegriffe (lowercase), die im Titel vorkommen.
-// Reihenfolge spielt keine Rolle (keine Überschneidungen).
 const PLE_LOGOS: { match: string[]; url: string }[] = [
   { match: ['wrestlemania'], url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Wrestlemania_Neutral_Logo.svg/500px-Wrestlemania_Neutral_Logo.svg.png' },
   { match: ['summerslam'], url: 'https://commons.wikimedia.org/wiki/Special:FilePath/SummerSlam%202025%20Logo.jpg?width=400' },
@@ -34,4 +35,32 @@ export function getShowLogo(type: string, title?: string): string | null {
     return null // unbekanntes PLE → Badge
   }
   return WEEKLY_LOGOS[type] ?? null
+}
+
+// --- Typ-Styles --------------------------------------------------------
+
+// Text-Badge (Fallback, wenn kein Logo)
+export const BADGE: Record<string, string> = {
+  RAW: 'bg-red-950 text-red-400',
+  SmackDown: 'bg-blue-950 text-blue-400',
+  PLE: 'bg-purple-950 text-purple-400',
+  SNM: 'bg-amber-950 text-amber-400',
+  NXT: 'bg-green-950 text-green-400',
+}
+
+// Linke Akzent-Border pro Typ
+export const BORDER_ACCENT: Record<string, string> = {
+  RAW: 'border-l-red-600',
+  SmackDown: 'border-l-blue-600',
+  PLE: 'border-l-purple-600',
+  SNM: 'border-l-amber-500',
+  NXT: 'border-l-green-600',
+}
+
+// Dezenter typ-getönter Verlauf (Scorecard-Look) — siehe globals.css
+export const TINT: Record<string, string> = {
+  RAW: 'card-tint-raw',
+  SmackDown: 'card-tint-sd',
+  PLE: 'card-tint-ple',
+  SNM: 'card-tint-snm',
 }

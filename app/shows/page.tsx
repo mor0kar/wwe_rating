@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getShowLogo } from '@/lib/showLogos'
+import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
+import { fmt, scoreColor } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
 
@@ -15,43 +16,6 @@ type Show = {
 }
 
 const SHOW_TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
-
-const BADGE: Record<string, string> = {
-  RAW: 'bg-red-950 text-red-400',
-  SmackDown: 'bg-blue-950 text-blue-400',
-  PLE: 'bg-purple-950 text-purple-400',
-  SNM: 'bg-amber-950 text-amber-400',
-  NXT: 'bg-green-950 text-green-400',
-}
-
-function fmt(n: number): string {
-  const s = parseFloat(n.toFixed(2)).toString()
-  return s.includes('.') ? s : s + '.0'
-}
-
-// Akzent-Border-Farbe pro Show-Typ
-const BORDER_ACCENT: Record<string, string> = {
-  RAW: 'border-l-red-600',
-  SmackDown: 'border-l-blue-600',
-  PLE: 'border-l-purple-600',
-  SNM: 'border-l-amber-500',
-  NXT: 'border-l-green-600',
-}
-
-// Typ-getönter Verlauf (Scorecard-Look)
-const TINT: Record<string, string> = {
-  RAW: 'card-tint-raw',
-  SmackDown: 'card-tint-sd',
-  PLE: 'card-tint-ple',
-  SNM: 'card-tint-snm',
-}
-
-function scoreColor(s: number) {
-  if (s > 10) return 'text-purple-400 font-bold'
-  if (s >= 7) return 'text-green-400'
-  if (s >= 4) return 'text-amber-500'
-  return 'text-red-400'
-}
 
 function avg(ratings: Record<string, number>) {
   const vals = Object.values(ratings).filter(v => v != null)

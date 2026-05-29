@@ -1,5 +1,6 @@
 import sql from '@/lib/db'
-import { getShowLogo } from '@/lib/showLogos'
+import { getShowLogo, BADGE } from '@/lib/showStyle'
+import { scoreColor, scoreHex } from '@/lib/score'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,14 +67,6 @@ async function getStats() {
   }
 }
 
-const BADGE: Record<string, string> = {
-  RAW: 'bg-red-950 text-red-400',
-  SmackDown: 'bg-blue-950 text-blue-400',
-  PLE: 'bg-purple-950 text-purple-400',
-  SNM: 'bg-amber-950 text-amber-400',
-  NXT: 'bg-green-950 text-green-400',
-}
-
 function showTypeBadge(type: string, className = 'h-4', title?: string) {
   const logo = getShowLogo(type, title)
   if (logo) {
@@ -93,21 +86,6 @@ const TYPE_BAR: Record<string, string> = {
   PLE: 'bg-purple-500',
   SNM: 'bg-amber-500',
   NXT: 'bg-green-500',
-}
-
-function scoreColor(s: number) {
-  if (s > 10) return 'text-purple-400 font-bold'
-  if (s >= 7) return 'text-green-400'
-  if (s >= 4) return 'text-amber-500'
-  return 'text-red-400'
-}
-
-// Score-Farbe als Hex (für SVG-fill)
-function scoreHex(s: number) {
-  if (s > 10) return '#a855f7'
-  if (s >= 7) return '#22c55e'
-  if (s >= 4) return '#f59e0b'
-  return '#ef4444'
 }
 
 // SVG-Verlaufschart der Show-Durchschnitte über die Saison.
