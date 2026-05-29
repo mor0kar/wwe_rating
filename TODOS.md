@@ -176,13 +176,13 @@ Nach jeder Iteration aktualisieren.
 ---
 
 ### [WWE-017] Score-Verlauf als Chart
-- **Status:** ⚪ Offen
+- **Status:** 🟢 Erledigt
 - **Priorität:** Niedrig
 - **Agent:** frontend-specialist
 - **Beschreibung:** Trend der Bewertungen über die Zeit (pro Person und/oder Show-Typ) als kleine Kurve auf der Stats-Seite — kein externes Chart-Lib, reines SVG
 - **Akzeptanzkriterium:** Auf `/stats` eine Verlaufs-Grafik (z.B. Ø pro Woche/Show), lesbar im Dark Mode, mobil tauglich
 - **Prüfmethode:** Stats-Seite aufrufen → Kurve zeigt Entwicklung der Schnitte über die Saison
-- **Evidenz:** —
+- **Evidenz:** Mai 2026. `ScoreTimeline`-Komponente (reines SVG, viewBox-skaliert) auf `/stats`: chronologischer Verlauf der Show-Durchschnitte, Fläche+Linie, Punkte farbkodiert nach Score (inkl. DANHAUSEN-Lila >10), Gridlines + Y-Achse (0/5/10/max), gestrichelte Referenzlinie für den Gesamtschnitt, Datums-Labels. `timeline` in `getStats()` ergänzt. `npm run build` grün.
 
 ---
 

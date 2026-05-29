@@ -47,6 +47,12 @@ async function getStats() {
     return { type, avg: avg(sc), count: typeShows.length }
   }).filter(t => t.count > 0)
 
+  // Verlauf: Show-Durchschnitte chronologisch (für den Score-Chart)
+  const timeline = showsWithRatings
+    .map(s => ({ date: s.date, type: s.type, avg: avg(Object.values(s.ratings)) }))
+    .filter((s): s is { date: string; type: string; avg: number } => s.avg !== null)
+    .sort((a, b) => a.date.localeCompare(b.date))
+
   return {
     globalAvg,
     pleAvg: avg(pleScores),
@@ -56,6 +62,7 @@ async function getStats() {
     topShows: showAvgs.slice(0, 5),
     flopShows: [...showAvgs].reverse().slice(0, 3),
     typeStats,
+    timeline,
   }
 }
 
@@ -93,6 +100,100 @@ function scoreColor(s: number) {
   if (s >= 7) return 'text-green-400'
   if (s >= 4) return 'text-amber-500'
   return 'text-red-400'
+}
+
+// Score-Farbe als Hex (für SVG-fill)
+function scoreHex(s: number) {
+  if (s > 10) return '#a855f7'
+  if (s >= 7) return '#22c55e'
+  if (s >= 4) return '#f59e0b'
+  return '#ef4444'
+}
+
+// SVG-Verlaufschart der Show-Durchschnitte über die Saison.
+// Reines SVG, keine externe Lib; skaliert via viewBox (mobil tauglich).
+function ScoreTimeline({
+  data,
+  globalAvg,
+}: {
+  data: { date: string; type: string; avg: number }[]
+  globalAvg: number | null
+}) {
+  if (data.length < 2) return null
+
+  const W = 720, H = 240
+  const padL = 30, padR = 14, padT = 16, padB = 30
+  const innerW = W - padL - padR
+  const innerH = H - padT - padB
+
+  const yMax = Math.max(10, Math.ceil(Math.max(...data.map(d => d.avg))))
+  const xAt = (i: number) => padL + (i / (data.length - 1)) * innerW
+  const yAt = (v: number) => padT + innerH - (Math.min(v, yMax) / yMax) * innerH
+
+  const linePts = data.map((d, i) => `${xAt(i).toFixed(1)},${yAt(d.avg).toFixed(1)}`).join(' ')
+  const areaPath =
+    `M ${xAt(0).toFixed(1)},${yAt(0).toFixed(1)} ` +
+    data.map((d, i) => `L ${xAt(i).toFixed(1)},${yAt(d.avg).toFixed(1)}`).join(' ') +
+    ` L ${xAt(data.length - 1).toFixed(1)},${yAt(0).toFixed(1)} Z`
+
+  const yTicks = Array.from(new Set([0, 5, 10, yMax])).filter(v => v <= yMax)
+  const lastIdx = data.length - 1
+  const xIdx = Array.from(new Set([0, Math.floor(lastIdx / 3), Math.floor((2 * lastIdx) / 3), lastIdx]))
+  const fmtDate = (iso: string) =>
+    new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Score-Verlauf der Saison">
+      <defs>
+        <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* Gridlines + Y-Beschriftung */}
+      {yTicks.map(v => (
+        <g key={v}>
+          <line x1={padL} y1={yAt(v)} x2={W - padR} y2={yAt(v)} stroke="#27272a" strokeWidth="1" />
+          <text x={padL - 6} y={yAt(v) + 4} textAnchor="end" fontSize="12" fill="#71717a">{v}</text>
+        </g>
+      ))}
+
+      {/* Gesamtschnitt als gestrichelte Referenz */}
+      {globalAvg != null && (
+        <line
+          x1={padL} y1={yAt(globalAvg)} x2={W - padR} y2={yAt(globalAvg)}
+          stroke="#52525b" strokeWidth="1" strokeDasharray="4 4"
+        />
+      )}
+
+      {/* Fläche + Linie */}
+      <path d={areaPath} fill="url(#scoreFill)" />
+      <polyline
+        points={linePts} fill="none" stroke="#ef4444" strokeWidth="2"
+        strokeLinejoin="round" strokeLinecap="round"
+      />
+
+      {/* Punkte, farbkodiert nach Score */}
+      {data.map((d, i) => (
+        <circle key={i} cx={xAt(i)} cy={yAt(d.avg)} r="2.5" fill={scoreHex(d.avg)} />
+      ))}
+
+      {/* X-Beschriftung (Datum) */}
+      {xIdx.map(i => (
+        <text
+          key={i}
+          x={xAt(i)}
+          y={H - 10}
+          textAnchor={i === 0 ? 'start' : i === lastIdx ? 'end' : 'middle'}
+          fontSize="12"
+          fill="#71717a"
+        >
+          {fmtDate(data[i].date)}
+        </text>
+      ))}
+    </svg>
+  )
 }
 
 function barColor(avg: number) {
@@ -139,6 +240,24 @@ export default async function StatsPage() {
             </div>
           ))}
         </div>
+
+        {/* Score-Verlauf über die Saison */}
+        {stats.timeline.length >= 2 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide">
+                Score-Verlauf
+              </h2>
+              <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                <span className="inline-block w-3 border-t border-dashed border-zinc-500" />
+                Ø Gesamt
+              </div>
+            </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+              <ScoreTimeline data={stats.timeline} globalAvg={stats.globalAvg} />
+            </div>
+          </div>
+        )}
 
         {/* Zweispaltig auf Desktop: Links Personen + Typ-Schnitt, Rechts Top5 + Flop3 */}
         <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-6 lg:space-y-0">
