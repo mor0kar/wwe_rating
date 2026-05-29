@@ -54,13 +54,20 @@ function AddShowForm() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 pb-24 lg:pb-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-50 uppercase tracking-wide">Show eintragen</h1>
-        <p className="text-xs text-zinc-600 mt-1">Personen ohne Bewertung einfach deaktivieren</p>
+    <div>
+      {/* Hero */}
+      <div className="relative overflow-hidden mb-6">
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 to-zinc-950" />
+        <div className="absolute inset-0 texture-grain opacity-[0.06] mix-blend-overlay pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(220,0,0,0.12),transparent_60%)] pointer-events-none" />
+        <div className="relative max-w-2xl mx-auto px-4 pt-10 pb-6">
+          <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Neue Show</p>
+          <h1 className="text-4xl font-bold uppercase tracking-tight text-white">Show eintragen</h1>
+          <p className="text-zinc-500 text-xs mt-1">Personen ohne Bewertung einfach deaktivieren</p>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="max-w-2xl mx-auto px-4 pb-24 lg:pb-8 space-y-4 animate-fade-in">
         {/* Show-Typ */}
         <div>
           <label className="text-xs text-zinc-500 mb-1.5 block">Show-Typ</label>
@@ -86,7 +93,7 @@ function AddShowForm() {
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-50 outline-none focus:border-zinc-500"
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-50 outline-none focus:border-red-600"
           />
         </div>
 
@@ -98,7 +105,7 @@ function AddShowForm() {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="optional"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-50 outline-none focus:border-zinc-500 placeholder:text-zinc-600"
+            className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-50 outline-none focus:border-red-600 placeholder:text-zinc-600"
           />
         </div>
 
