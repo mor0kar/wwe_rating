@@ -10,7 +10,7 @@ npm install
 cp .env.example .env.local
 ```
 Dann `.env.local` öffnen und ausfüllen:
-- `DATABASE_URL` → Transaction Pooler URL aus Supabase Dashboard
+- `POSTGRES_URL` → Transaction Pooler URL aus Supabase Dashboard
   (Project Settings → Database → Connection string → Transaction mode, Port 6543)
 - `APP_PIN` → z.B. `1312` (was auch immer ihr wollt)
 
@@ -41,7 +41,7 @@ npx vercel
 ```
 
 In Vercel unter Settings → Environment Variables:
-- `DATABASE_URL` (Production)
+- `POSTGRES_URL` (Production) — wird bei verbundener Supabase-Integration automatisch gesetzt
 - `APP_PIN` (Production)
 
 ---
