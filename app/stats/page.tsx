@@ -1,6 +1,7 @@
 import sql from '@/lib/db'
 import { getShowLogo, BADGE } from '@/lib/showStyle'
-import { scoreColor, scoreHex } from '@/lib/score'
+import { scoreColor } from '@/lib/score'
+import ScoreTimeline from './ScoreTimeline'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,8 +51,8 @@ async function getStats() {
 
   // Verlauf: Show-Durchschnitte chronologisch (für den Score-Chart)
   const timeline = showsWithRatings
-    .map(s => ({ date: s.date, type: s.type, avg: avg(Object.values(s.ratings)) }))
-    .filter((s): s is { date: string; type: string; avg: number } => s.avg !== null)
+    .map(s => ({ id: s.id, date: s.date, type: s.type, title: s.title, avg: avg(Object.values(s.ratings)) }))
+    .filter((s): s is { id: number; date: string; type: string; title: string; avg: number } => s.avg !== null)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return {
@@ -86,92 +87,6 @@ const TYPE_BAR: Record<string, string> = {
   PLE: 'bg-purple-500',
   SNM: 'bg-amber-500',
   NXT: 'bg-green-500',
-}
-
-// SVG-Verlaufschart der Show-Durchschnitte über die Saison.
-// Reines SVG, keine externe Lib; skaliert via viewBox (mobil tauglich).
-function ScoreTimeline({
-  data,
-  globalAvg,
-}: {
-  data: { date: string; type: string; avg: number }[]
-  globalAvg: number | null
-}) {
-  if (data.length < 2) return null
-
-  const W = 720, H = 240
-  const padL = 30, padR = 14, padT = 16, padB = 30
-  const innerW = W - padL - padR
-  const innerH = H - padT - padB
-
-  const yMax = Math.max(10, Math.ceil(Math.max(...data.map(d => d.avg))))
-  const xAt = (i: number) => padL + (i / (data.length - 1)) * innerW
-  const yAt = (v: number) => padT + innerH - (Math.min(v, yMax) / yMax) * innerH
-
-  const linePts = data.map((d, i) => `${xAt(i).toFixed(1)},${yAt(d.avg).toFixed(1)}`).join(' ')
-  const areaPath =
-    `M ${xAt(0).toFixed(1)},${yAt(0).toFixed(1)} ` +
-    data.map((d, i) => `L ${xAt(i).toFixed(1)},${yAt(d.avg).toFixed(1)}`).join(' ') +
-    ` L ${xAt(data.length - 1).toFixed(1)},${yAt(0).toFixed(1)} Z`
-
-  const yTicks = Array.from(new Set([0, 5, 10, yMax])).filter(v => v <= yMax)
-  const lastIdx = data.length - 1
-  const xIdx = Array.from(new Set([0, Math.floor(lastIdx / 3), Math.floor((2 * lastIdx) / 3), lastIdx]))
-  const fmtDate = (iso: string) =>
-    new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Score-Verlauf der Saison">
-      <defs>
-        <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-
-      {/* Gridlines + Y-Beschriftung */}
-      {yTicks.map(v => (
-        <g key={v}>
-          <line x1={padL} y1={yAt(v)} x2={W - padR} y2={yAt(v)} stroke="#27272a" strokeWidth="1" />
-          <text x={padL - 6} y={yAt(v) + 4} textAnchor="end" fontSize="12" fill="#71717a">{v}</text>
-        </g>
-      ))}
-
-      {/* Gesamtschnitt als gestrichelte Referenz */}
-      {globalAvg != null && (
-        <line
-          x1={padL} y1={yAt(globalAvg)} x2={W - padR} y2={yAt(globalAvg)}
-          stroke="#52525b" strokeWidth="1" strokeDasharray="4 4"
-        />
-      )}
-
-      {/* Fläche + Linie */}
-      <path d={areaPath} fill="url(#scoreFill)" />
-      <polyline
-        points={linePts} fill="none" stroke="#ef4444" strokeWidth="2"
-        strokeLinejoin="round" strokeLinecap="round"
-      />
-
-      {/* Punkte, farbkodiert nach Score */}
-      {data.map((d, i) => (
-        <circle key={i} cx={xAt(i)} cy={yAt(d.avg)} r="2.5" fill={scoreHex(d.avg)} />
-      ))}
-
-      {/* X-Beschriftung (Datum) */}
-      {xIdx.map(i => (
-        <text
-          key={i}
-          x={xAt(i)}
-          y={H - 10}
-          textAnchor={i === 0 ? 'start' : i === lastIdx ? 'end' : 'middle'}
-          fontSize="12"
-          fill="#71717a"
-        >
-          {fmtDate(data[i].date)}
-        </text>
-      ))}
-    </svg>
-  )
 }
 
 function barColor(avg: number) {
