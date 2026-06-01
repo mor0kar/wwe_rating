@@ -5,6 +5,7 @@ import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
 import { fmt, scoreColor } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
+import CalendarReminder from '@/app/components/CalendarReminder'
 
 type Show = {
   id: number
@@ -470,6 +471,9 @@ export default function ShowsPage() {
           <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>
         </div>
       </div>
+
+      {/* Erinnerung, den Kalender zu aktualisieren (wenn er zur Neige geht) */}
+      <CalendarReminder />
 
       {/* Noch zu bewerten — gelaufene Events ohne angelegte Show */}
       {pending.length > 0 && (

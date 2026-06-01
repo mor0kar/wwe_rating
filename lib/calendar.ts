@@ -75,6 +75,33 @@ export function getUpcomingEvents(): CalendarEvent[] {
   return EVENTS
 }
 
+// Datum, an dem die Liste zuletzt aktualisiert wurde (bei jeder Pflege anpassen).
+export const CALENDAR_LAST_UPDATED = '2026-06-01'
+
+// Erinnerung auslösen, wenn weniger als so viele Tage Vorlauf bleiben …
+const REFRESH_RUNWAY_DAYS = 28
+// … oder die Liste seit so vielen Tagen nicht mehr gepflegt wurde.
+const REFRESH_MAX_AGE_DAYS = 56
+
+function dayDiff(aISO: string, bISO: string): number {
+  return Math.round((Date.parse(aISO + 'T00:00:00Z') - Date.parse(bISO + 'T00:00:00Z')) / 86400000)
+}
+
+// Status für die Kalender-Erinnerung (rein, läuft client- wie serverseitig).
+export function calendarStatus(now: Date = new Date()): {
+  lastEventDate: string
+  daysUntilLastEvent: number
+  daysSinceUpdate: number
+  needsRefresh: boolean
+} {
+  const todayISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(now)
+  const lastEventDate = EVENTS.reduce((max, e) => (e.date > max ? e.date : max), EVENTS[0].date)
+  const daysUntilLastEvent = dayDiff(lastEventDate, todayISO)
+  const daysSinceUpdate = dayDiff(todayISO, CALENDAR_LAST_UPDATED)
+  const needsRefresh = daysUntilLastEvent <= REFRESH_RUNWAY_DAYS || daysSinceUpdate >= REFRESH_MAX_AGE_DAYS
+  return { lastEventDate, daysUntilLastEvent, daysSinceUpdate, needsRefresh }
+}
+
 // --- Zeit-Helfer -------------------------------------------------------
 
 // Offset (in ms) einer Zeitzone zum gegebenen Instant: (Zeit in tz) − UTC.
