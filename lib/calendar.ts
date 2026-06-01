@@ -187,11 +187,14 @@ export function eventInstant(ev: CalendarEvent): Date {
 }
 
 // Deutsche Live-Zeit: Uhrzeit + Tagesversatz ggü. Event-Datum + Datums-Label.
+// liveFriendly: abends vor Mitternacht ODER nachts in ein Wochenende (Sa/So)
+// → realistisch live schaubar, ohne dass am nächsten Werktag gearbeitet werden muss.
 export function germanWatchTime(ev: CalendarEvent): {
   time: string         // z.B. "02:00"
   dayOffset: number    // 0 = selber Tag, 1 = nächster Tag (typisch für US-Nachtshows)
   weekday: string      // z.B. "Di"
   dateLabel: string    // z.B. "02.06."
+  liveFriendly: boolean
 } {
   const instant = eventInstant(ev)
   const berlin = new Intl.DateTimeFormat('de-DE', {
@@ -209,11 +212,16 @@ export function germanWatchTime(ev: CalendarEvent): {
   const dayOffset = Math.round(
     (Date.parse(berlinDateKey + 'T00:00:00Z') - Date.parse(ev.date + 'T00:00:00Z')) / 86400000
   )
+  // Wochentag (in DE) der Ausstrahlung: 0 = So .. 6 = Sa
+  const berlinWeekday = new Date(berlinDateKey + 'T12:00:00Z').getUTCDay()
+  const afterMidnight = dayOffset >= 1
+  const liveFriendly = !afterMidnight || berlinWeekday === 0 || berlinWeekday === 6
   return {
     time: `${map.hour}:${map.minute}`,
     dayOffset,
     weekday: map.weekday,
     dateLabel: `${map.day}.${map.month}.`,
+    liveFriendly,
   }
 }
 

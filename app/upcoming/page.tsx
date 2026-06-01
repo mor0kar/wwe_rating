@@ -182,13 +182,21 @@ export default function UpcomingPage() {
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap text-[11px] leading-none">
                           <span className="text-zinc-500">{local} Uhr Ortszeit</span>
                           <span className="text-zinc-700">·</span>
-                          <span className="text-red-400 font-medium">
+                          <span className={`font-medium ${!ev.taped && de.liveFriendly ? 'text-green-400' : 'text-red-400'}`}>
                             🇩🇪 {de.time} Uhr
                             {de.dayOffset !== 0 && (
                               <span className="text-zinc-500 font-normal"> ({de.weekday}, {de.dateLabel})</span>
                             )}
                           </span>
-                          {ev.taped && <span className="text-amber-400/80">(Aufzeichnung)</span>}
+                          {ev.taped ? (
+                            <span className="text-amber-400/80">(Aufzeichnung)</span>
+                          ) : de.liveFriendly ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-green-500/15 text-green-300 border border-green-500/30">
+                              📺 Live machbar
+                            </span>
+                          ) : (
+                            <span className="text-zinc-600">🌙 lieber am Folgetag</span>
+                          )}
                         </div>
                       </div>
                     </div>
