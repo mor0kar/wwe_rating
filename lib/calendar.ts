@@ -176,14 +176,19 @@ function tzOffsetMs(instant: Date, tz: string): number {
   return asUTC - instant.getTime()
 }
 
-// Lokale Wanduhr-Zeit in tz → exakter UTC-Instant (DST-sicher).
-export function eventInstant(ev: CalendarEvent): Date {
-  const [y, m, d] = ev.date.split('-').map(Number)
-  const [hh, mm] = (ev.localTime ?? DEFAULT_LOCAL_TIME).split(':').map(Number)
+// Lokale Wanduhr-Zeit (YYYY-MM-DD + HH:mm) in tz → exakter UTC-Instant (DST-sicher).
+export function zonedInstant(dateISO: string, time: string, tz: string): Date {
+  const [y, m, d] = dateISO.split('-').map(Number)
+  const [hh, mm] = time.split(':').map(Number)
   const wallAsUTC = Date.UTC(y, m - 1, d, hh, mm)
   // Offset am ungefähren Instant bestimmen und korrigieren.
-  const offset = tzOffsetMs(new Date(wallAsUTC), ev.tz)
+  const offset = tzOffsetMs(new Date(wallAsUTC), tz)
   return new Date(wallAsUTC - offset)
+}
+
+// Startzeit eines Events als exakter UTC-Instant.
+export function eventInstant(ev: CalendarEvent): Date {
+  return zonedInstant(ev.date, ev.localTime ?? DEFAULT_LOCAL_TIME, ev.tz)
 }
 
 // Deutsche Live-Zeit: Uhrzeit + Tagesversatz ggü. Event-Datum + Datums-Label.

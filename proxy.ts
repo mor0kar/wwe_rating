@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { PIN_COOKIE } from '@/lib/auth'
 
-const PUBLIC_PATHS = ['/login', '/api/auth']
+const PUBLIC_PATHS = ['/login', '/api/auth', '/api/cron']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
