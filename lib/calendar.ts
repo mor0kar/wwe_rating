@@ -14,6 +14,8 @@ export type CalendarEvent = {
   city: string
   tz: string          // IANA-Zeitzone des Veranstaltungsorts
   localTime?: string  // lokale Startzeit HH:mm vor Ort (Default: 20:00)
+  taped?: boolean     // Folge wird an diesem Abend aufgezeichnet, läuft erst später (Spoiler-Gefahr!)
+  airsOn?: string     // YYYY-MM-DD der TV-Ausstrahlung (nur relevant wenn taped)
 }
 
 // Standard-Annahme: WWE-TV-Shows starten 20:00 lokaler Ortszeit.
@@ -29,7 +31,10 @@ const EVENTS: CalendarEvent[] = [
   { date: '2026-06-15', type: 'RAW', venue: 'CFG Bank Arena', city: 'Baltimore, MD', tz: 'America/New_York' },
   { date: '2026-06-19', type: 'SmackDown', venue: 'T-Mobile Center', city: 'Kansas City, MO', tz: 'America/Chicago' },
   { date: '2026-06-22', type: 'RAW', venue: 'The O2', city: 'London, UK', tz: 'Europe/London' },
-  { date: '2026-06-29', type: 'RAW', title: 'RAW/SmackDown', venue: "Jim Whelan's Boardwalk Hall", city: 'Atlantic City, NJ', tz: 'America/New_York' },
+  // Doubleheader-Abend: RAW läuft live, SmackDown wird direkt im Anschluss
+  // aufgezeichnet und erst am Freitag (03.07.) ausgestrahlt → Spoiler-Gefahr.
+  { date: '2026-06-29', type: 'RAW', venue: "Jim Whelan's Boardwalk Hall", city: 'Atlantic City, NJ', tz: 'America/New_York' },
+  { date: '2026-06-29', type: 'SmackDown', venue: "Jim Whelan's Boardwalk Hall", city: 'Atlantic City, NJ', tz: 'America/New_York', taped: true, airsOn: '2026-07-03' },
   { date: '2026-07-06', type: 'RAW', venue: 'Allstate Arena', city: 'Chicago, IL', tz: 'America/Chicago' },
   { date: '2026-07-10', type: 'SmackDown', venue: 'Paycom Center', city: 'Oklahoma City, OK', tz: 'America/Chicago' },
   { date: '2026-07-13', type: 'RAW', venue: 'American Airlines Arena', city: 'Dallas, TX', tz: 'America/Chicago' },
@@ -116,4 +121,11 @@ export function germanWatchTime(ev: CalendarEvent): {
 // Lokale Startzeit am Veranstaltungsort, z.B. "20:00".
 export function localStartTime(ev: CalendarEvent): string {
   return (ev.localTime ?? DEFAULT_LOCAL_TIME)
+}
+
+// Ausstrahlungs-Label für aufgezeichnete Folgen, z.B. "Fr, 03.07.".
+export function airsOnLabel(iso: string): string {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', {
+    weekday: 'short', day: '2-digit', month: '2-digit',
+  })
 }

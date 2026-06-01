@@ -164,7 +164,7 @@ function AddShowForm() {
                           type="range"
                           min={0}
                           max={10}
-                          step={0.5}
+                          step={0.1}
                           value={base}
                           onChange={e => setRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
                           className="flex-1 accent-zinc-100"
@@ -173,7 +173,7 @@ function AddShowForm() {
                           type="number"
                           min={0}
                           max={10}
-                          step={0.5}
+                          step={0.1}
                           value={base}
                           onChange={e => {
                             const v = parseFloat(e.target.value)

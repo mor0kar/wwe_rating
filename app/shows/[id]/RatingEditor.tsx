@@ -129,7 +129,7 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
                       type="range"
                       min={0}
                       max={10}
-                      step={0.5}
+                      step={0.1}
                       value={Math.min(b, 10)}
                       onChange={e => setBase(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
                       className="flex-1 accent-zinc-100"
@@ -138,7 +138,7 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
                       type="number"
                       min={0}
                       max={10}
-                      step={0.5}
+                      step={0.1}
                       value={Math.min(b, 10)}
                       onChange={e => {
                         const v = parseFloat(e.target.value)

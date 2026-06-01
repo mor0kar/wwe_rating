@@ -5,6 +5,7 @@ import {
   getUpcomingEvents,
   germanWatchTime,
   localStartTime,
+  airsOnLabel,
   type CalendarEvent,
 } from '@/lib/calendar'
 import { getShowLogo, BADGE, BORDER_ACCENT } from '@/lib/showStyle'
@@ -105,7 +106,7 @@ export default function UpcomingPage() {
                 return (
                   <div
                     key={i}
-                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 transition-colors hover:border-zinc-700 ${past && !existing ? 'opacity-40' : ''}`}
+                    className={`bg-zinc-900 border border-zinc-800 border-l-4 ${accent} rounded-2xl p-4 flex items-center justify-between gap-3 transition-colors hover:border-zinc-700 ${ev.taped ? 'ring-1 ring-amber-500/40' : ''} ${past && !existing ? 'opacity-40' : ''}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Datum-Pill */}
@@ -134,11 +135,23 @@ export default function UpcomingPage() {
                           {ev.title && ev.title !== ev.type && (
                             <span className="text-sm font-semibold text-zinc-100 truncate">{ev.title}</span>
                           )}
+                          {ev.taped && (
+                            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                              📼 Tape
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-zinc-500 truncate">{ev.venue}</p>
                         <p className="text-xs text-zinc-600 truncate">{ev.city}</p>
 
-                        {/* Zeiten: Ortszeit + deutsche Live-Zeit */}
+                        {/* Spoiler-Hinweis für aufgezeichnete Folgen */}
+                        {ev.taped && ev.airsOn && (
+                          <p className="text-[11px] text-amber-400 font-medium mt-1">
+                            ⚠️ Vorab aufgezeichnet · Ausstrahlung {airsOnLabel(ev.airsOn)} — Spoiler-Gefahr
+                          </p>
+                        )}
+
+                        {/* Zeiten: Ortszeit + deutsche (Aufnahme-)Zeit */}
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap text-[11px] leading-none">
                           <span className="text-zinc-500">{local} Uhr Ortszeit</span>
                           <span className="text-zinc-700">·</span>
@@ -148,6 +161,7 @@ export default function UpcomingPage() {
                               <span className="text-zinc-500 font-normal"> ({de.weekday}, {de.dateLabel})</span>
                             )}
                           </span>
+                          {ev.taped && <span className="text-amber-400/80">(Aufzeichnung)</span>}
                         </div>
                       </div>
                     </div>
