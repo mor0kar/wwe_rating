@@ -141,7 +141,7 @@ export default function UpcomingPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-zinc-500 truncate">{ev.venue}</p>
+                        {ev.venue && <p className="text-xs text-zinc-500 truncate">{ev.venue}</p>}
                         <p className="text-xs text-zinc-600 truncate">{ev.city}</p>
 
                         {/* Spoiler-Hinweis für aufgezeichnete Folgen */}
