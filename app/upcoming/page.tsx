@@ -6,6 +6,7 @@ import {
   germanWatchTime,
   localStartTime,
   airsOnLabel,
+  missingShowWeeks,
   type CalendarEvent,
 } from '@/lib/calendar'
 import { getShowLogo, BADGE, BORDER_ACCENT } from '@/lib/showStyle'
@@ -75,6 +76,10 @@ export default function UpcomingPage() {
     router.push(`/shows/add?${params.toString()}`)
   }
 
+  const gaps = missingShowWeeks()
+  const fmtDay = (iso: string) =>
+    new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+
   return (
     <div>
       {/* Header */}
@@ -88,6 +93,28 @@ export default function UpcomingPage() {
           <p className="text-zinc-500 text-xs mt-1">Ortszeit &amp; deutsche Live-Zeit (🇩🇪) automatisch umgerechnet</p>
         </div>
       </div>
+
+      {/* Hinweis: Wochen, in denen RAW oder SmackDown (noch) fehlt */}
+      {gaps.length > 0 && (
+        <div className="max-w-6xl mx-auto px-4 mb-6">
+          <div className="bg-amber-950/40 border border-amber-500/40 rounded-2xl p-4">
+            <p className="text-sm font-semibold text-amber-200 flex items-center gap-2">
+              <span>⚠️</span> Fehlende Shows
+            </p>
+            <p className="text-xs text-amber-200/80 mt-0.5">
+              In diesen Wochen ist noch keine Show gebucht (oder die Location steht noch nicht fest):
+            </p>
+            <ul className="mt-2 space-y-1">
+              {gaps.map(g => (
+                <li key={g.weekStart} className="text-xs text-amber-100">
+                  <span className="text-amber-300/70">{fmtDay(g.weekStart)}–{fmtDay(g.weekEnd)}:</span>{' '}
+                  {g.missing.join(' & ')} fehlt
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 pb-24 space-y-8">
         {Object.entries(groups).map(([monthKey, monthEvents]) => (

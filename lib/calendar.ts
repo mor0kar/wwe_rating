@@ -87,6 +87,63 @@ function dayDiff(aISO: string, bISO: string): number {
   return Math.round((Date.parse(aISO + 'T00:00:00Z') - Date.parse(bISO + 'T00:00:00Z')) / 86400000)
 }
 
+// Montag (ISO) der Woche, in der das Datum liegt.
+function mondayOfISO(iso: string): string {
+  const d = new Date(iso + 'T00:00:00Z')
+  const dow = d.getUTCDay() // 0=So .. 6=Sa
+  d.setUTCDate(d.getUTCDate() + (dow === 0 ? -6 : 1 - dow))
+  return d.toISOString().slice(0, 10)
+}
+
+function addDaysISO(iso: string, n: number): string {
+  const d = new Date(iso + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+// Wochen innerhalb des gebuchten Zeitraums, in denen RAW oder SmackDown fehlt.
+// Getapte Folgen zählen für ihre Ausstrahlungswoche (airsOn).
+// Die auslaufende letzte Woche wird ausgenommen (deckt die Update-Erinnerung ab).
+export function missingShowWeeks(now: Date = new Date()): {
+  weekStart: string
+  weekEnd: string
+  missing: ShowType[]
+}[] {
+  const todayISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(now)
+  const weekly = EVENTS.filter(e => e.type === 'RAW' || e.type === 'SmackDown')
+  if (!weekly.length) return []
+
+  const broadcastDate = (e: CalendarEvent) => e.airsOn ?? e.date
+
+  // Abdeckung: Wochen-Montag → vorhandene Typen
+  const cover = new Map<string, Set<ShowType>>()
+  for (const e of weekly) {
+    const wk = mondayOfISO(broadcastDate(e))
+    if (!cover.has(wk)) cover.set(wk, new Set())
+    cover.get(wk)!.add(e.type)
+  }
+
+  const dates = weekly.map(broadcastDate).sort()
+  const lastBroadcast = dates[dates.length - 1]
+  const result: { weekStart: string; weekEnd: string; missing: ShowType[] }[] = []
+
+  let cur = mondayOfISO(dates[0])
+  const lastWk = mondayOfISO(lastBroadcast)
+  while (cur <= lastWk) {
+    const end = addDaysISO(cur, 6)
+    // nur aktuelle/zukünftige Wochen, die von späteren Events eingeschlossen sind
+    if (end >= todayISO && lastBroadcast > end) {
+      const present = cover.get(cur) ?? new Set<ShowType>()
+      const missing: ShowType[] = []
+      if (!present.has('RAW')) missing.push('RAW')
+      if (!present.has('SmackDown')) missing.push('SmackDown')
+      if (missing.length) result.push({ weekStart: cur, weekEnd: end, missing })
+    }
+    cur = addDaysISO(cur, 7)
+  }
+  return result
+}
+
 // Status für die Kalender-Erinnerung (rein, läuft client- wie serverseitig).
 export function calendarStatus(now: Date = new Date()): {
   lastEventDate: string
