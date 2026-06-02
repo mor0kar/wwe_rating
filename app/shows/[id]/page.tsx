@@ -61,8 +61,8 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         <div className={`absolute inset-0 pointer-events-none ${TINT[show.type] || ''}`} />
         <div className="relative flex items-center justify-between gap-4">
           <div className="min-w-0">
-            {getShowLogo(show.type, show.title) ? (
-              <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-11 object-contain mb-3" />
+            {getShowLogo(show.type, show.title, 'wordmark') ? (
+              <img src={getShowLogo(show.type, show.title, 'wordmark')!} alt={show.title || show.type} className="h-11 object-contain mb-3" />
             ) : (
               <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-md mb-3 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
                 {show.type}

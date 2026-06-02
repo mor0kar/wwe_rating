@@ -22,17 +22,27 @@ const PLE_LOGOS: { match: string[]; url: string }[] = [
   { match: ['money in the bank'], url: 'https://en.wikipedia.org/wiki/Special:FilePath/WWE%20Money%20In%20the%20Bank%20Logo.png?width=400' },
   { match: ['backlash'], url: 'https://en.wikipedia.org/wiki/Special:FilePath/WWE%20Backlash%202025%20logo.png?width=400' },
   { match: ['survivor series'], url: 'https://en.wikipedia.org/wiki/Special:FilePath/Survivor%20Series%202022%20logo.png?width=400' },
+  { match: ['night of champions'], url: 'https://en.wikipedia.org/wiki/Special:FilePath/WWE%20Night%20of%20Champions%202023%20logo.png?width=400' },
 ]
 
-// Liefert die Logo-URL für eine Show oder null (→ Fallback auf Text-Badge).
-export function getShowLogo(type: string, title?: string): string | null {
+// Generisches PLE-Bild als Fallback (statt Text-Badge), wenn kein spezifisches Logo passt.
+const PLE_EMBLEM = '/icons/ple-generic.png'          // kompaktes "PLE"-Emblem (kleine Größen)
+const PLE_WORDMARK = '/icons/ple-generic-wordmark.png' // "PREMIUM LIVE EVENT"-Wortmarke (große Stellen)
+
+// Liefert die Logo-URL für eine Show. Unbekannte PLEs bekommen ein generisches
+// PLE-Bild (plePlaceholder: 'emblem' = kompakt, 'wordmark' = groß, 'none' = Badge).
+export function getShowLogo(
+  type: string,
+  title?: string,
+  plePlaceholder: 'emblem' | 'wordmark' | 'none' = 'emblem',
+): string | null {
   if (type === 'PLE') {
-    if (!title) return null
-    const t = title.toLowerCase()
+    const t = (title ?? '').toLowerCase()
     for (const ple of PLE_LOGOS) {
       if (ple.match.some(m => t.includes(m))) return ple.url
     }
-    return null // unbekanntes PLE → Badge
+    if (plePlaceholder === 'none') return null
+    return plePlaceholder === 'wordmark' ? PLE_WORDMARK : PLE_EMBLEM
   }
   return WEEKLY_LOGOS[type] ?? null
 }
