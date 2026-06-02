@@ -98,13 +98,15 @@ async function buildMessage(now: Date): Promise<string | null> {
   return sections.join('\n\n')
 }
 
-async function run(): Promise<NextResponse> {
+async function run(test = false): Promise<NextResponse> {
   const webhook = process.env.DISCORD_WEBHOOK_URL
   if (!webhook) {
     return NextResponse.json({ ok: false, error: 'DISCORD_WEBHOOK_URL nicht gesetzt' }, { status: 500 })
   }
 
-  const content = await buildMessage(new Date())
+  const content = test
+    ? '✅ **Test** — Squared Circle Ratings ist mit Discord verbunden. Ab jetzt gibt es hier Show-Reminder, Bewerten-Erinnerungen, Taped-Spoiler-Warnungen und montags die Wochenübersicht. 🤼'
+    : await buildMessage(new Date())
   if (!content) {
     return NextResponse.json({ ok: true, posted: false, reason: 'nichts zu melden' })
   }
@@ -125,12 +127,13 @@ function authorized(req: NextRequest): boolean {
 }
 
 // Vercel-Cron ruft per GET auf; POST für manuelles Triggern erlaubt.
+// ?test=1 sendet eine feste Test-Nachricht (zum Verifizieren des Webhooks).
 export async function GET(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  return run()
+  return run(req.nextUrl.searchParams.get('test') != null)
 }
 
 export async function POST(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  return run()
+  return run(req.nextUrl.searchParams.get('test') != null)
 }
