@@ -23,6 +23,21 @@ export type CalendarEvent = {
 // Standard-Annahme, falls keine lokale Startzeit hinterlegt ist.
 const DEFAULT_LOCAL_TIME = '20:00'
 
+// Die WWE-Ticketseite listet die Einlass-/Listenzeit; der eigentliche Show-Start
+// (Bell) ist erfahrungsgemäß ~30 Min später. Offset wird auf hinterlegte
+// localTime-Werte addiert (nicht auf den Default).
+const SHOW_START_OFFSET_MIN = 30
+
+// Tatsächliche lokale Startzeit (Listenzeit + Offset), z.B. "19:30" → "20:00".
+function effectiveLocalTime(ev: CalendarEvent): string {
+  if (!ev.localTime) return DEFAULT_LOCAL_TIME
+  const [h, m] = ev.localTime.split(':').map(Number)
+  const total = h * 60 + m + SHOW_START_OFFSET_MIN
+  const hh = Math.floor(total / 60) % 24
+  const mm = total % 60
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+}
+
 const EVENTS: CalendarEvent[] = [
   // Mai (bereits gelaufen)
   { date: '2026-05-29', type: 'SmackDown', venue: 'Olimpic Arena', city: 'Badalona, Spain', tz: 'Europe/Madrid' },
@@ -188,7 +203,7 @@ export function zonedInstant(dateISO: string, time: string, tz: string): Date {
 
 // Startzeit eines Events als exakter UTC-Instant.
 export function eventInstant(ev: CalendarEvent): Date {
-  return zonedInstant(ev.date, ev.localTime ?? DEFAULT_LOCAL_TIME, ev.tz)
+  return zonedInstant(ev.date, effectiveLocalTime(ev), ev.tz)
 }
 
 // Deutsche Live-Zeit: Uhrzeit + Tagesversatz ggü. Event-Datum + Datums-Label.
@@ -230,9 +245,9 @@ export function germanWatchTime(ev: CalendarEvent): {
   }
 }
 
-// Lokale Startzeit am Veranstaltungsort, z.B. "20:00".
+// Lokale Startzeit am Veranstaltungsort (tatsächlicher Show-Start), z.B. "20:00".
 export function localStartTime(ev: CalendarEvent): string {
-  return (ev.localTime ?? DEFAULT_LOCAL_TIME)
+  return effectiveLocalTime(ev)
 }
 
 // Ausstrahlungs-Label für aufgezeichnete Folgen, z.B. "Fr, 03.07.".
