@@ -466,7 +466,6 @@ export default function ShowsPage() {
           <div>
             <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Show-Bewertungen</p>
             <h1 className="font-heading text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white drop-shadow-lg leading-[0.95]">Squared Circle Ratings</h1>
-            <p className="text-zinc-400 mt-2 text-sm">Foffi · Jan · Björn · Curry</p>
           </div>
           <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>
         </div>

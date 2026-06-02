@@ -14,7 +14,7 @@ const oswald = Oswald({
 
 export const metadata: Metadata = {
   title: 'Squared Circle Ratings',
-  description: 'Wöchentliche Show-Bewertungen für Foffi, Jan, Björn & Curry',
+  description: 'Wöchentliche WWE-Show-Bewertungen',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,

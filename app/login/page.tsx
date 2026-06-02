@@ -43,7 +43,7 @@ export default function LoginPage() {
             Squared Circle Ratings
           </h1>
           <p className="text-zinc-500 mt-2 text-sm uppercase tracking-widest">
-            Foffi · Jan · Björn · Curry
+            WWE Show Ratings
           </p>
         </div>
 
