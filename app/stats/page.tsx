@@ -1,6 +1,6 @@
 import sql from '@/lib/db'
-import { getShowLogo, BADGE } from '@/lib/showStyle'
-import { scoreColor } from '@/lib/score'
+import { getShowLogo, BADGE, SHOW_TYPES } from '@/lib/showStyle'
+import { scoreColor, avgScore } from '@/lib/score'
 import ScoreTimeline from './ScoreTimeline'
 
 export const dynamic = 'force-dynamic'
@@ -21,13 +21,8 @@ async function getStats() {
     ) as Record<string, number>,
   }))
 
-  function avg(scores: number[]) {
-    if (!scores.length) return null
-    return scores.reduce((a, b) => a + b, 0) / scores.length
-  }
-
   const allScores = ratings.map(r => Number(r.score))
-  const globalAvg = avg(allScores)
+  const globalAvg = avgScore(allScores)
   const pleScores = ratings.filter(r => {
     const show = shows.find(s => s.id === r.show_id)
     return show?.type === 'PLE'
@@ -35,29 +30,29 @@ async function getStats() {
 
   const personStats = persons.map(p => {
     const sc = ratings.filter(r => r.person_name === p.name).map(r => Number(r.score))
-    return { name: p.name, avg: avg(sc), count: sc.length }
+    return { name: p.name, avg: avgScore(sc), count: sc.length }
   }).filter(p => p.avg !== null).sort((a, b) => b.avg! - a.avg!)
 
   const showAvgs = showsWithRatings.map(s => {
     const sc = Object.values(s.ratings)
-    return { ...s, avg: avg(sc) }
+    return { ...s, avg: avgScore(sc) }
   }).filter(s => s.avg !== null).sort((a, b) => b.avg! - a.avg!)
 
-  const typeStats = ['RAW', 'SmackDown', 'PLE', 'SNM'].map(type => {
+  const typeStats = SHOW_TYPES.map(type => {
     const typeShows = showsWithRatings.filter(s => s.type === type)
     const sc = typeShows.flatMap(s => Object.values(s.ratings))
-    return { type, avg: avg(sc), count: typeShows.length }
+    return { type, avg: avgScore(sc), count: typeShows.length }
   }).filter(t => t.count > 0)
 
   // Verlauf: Show-Durchschnitte chronologisch (für den Score-Chart)
   const timeline = showsWithRatings
-    .map(s => ({ id: s.id, date: s.date, type: s.type, title: s.title, avg: avg(Object.values(s.ratings)) }))
+    .map(s => ({ id: s.id, date: s.date, type: s.type, title: s.title, avg: avgScore(Object.values(s.ratings)) }))
     .filter((s): s is { id: number; date: string; type: string; title: string; avg: number } => s.avg !== null)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return {
     globalAvg,
-    pleAvg: avg(pleScores),
+    pleAvg: avgScore(pleScores),
     totalShows: shows.length,
     totalRatings: allScores.length,
     personStats,

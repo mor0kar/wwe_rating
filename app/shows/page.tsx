@@ -1,11 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
-import { fmt, scoreColor } from '@/lib/score'
+import { getShowLogo, BADGE, BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS } from '@/lib/showStyle'
+import { fmt, scoreColor, avgScore } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
 import CalendarReminder from '@/app/components/CalendarReminder'
+import { useIdentity } from '@/lib/identity'
 
 type Show = {
   id: number
@@ -17,15 +18,6 @@ type Show = {
   notes: Record<string, string | null>
 }
 
-const SHOW_TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
-
-function avg(ratings: Record<string, number>) {
-  const vals = Object.values(ratings).filter(v => v != null)
-  if (!vals.length) return null
-  return vals.reduce((a, b) => a + b, 0) / vals.length
-}
-
-const FILTERS = ['Alle', 'RAW', 'SmackDown', 'PLE', 'SNM']
 
 // --- Inline-Edit-Card --------------------------------------------------
 
@@ -258,10 +250,16 @@ function ShowCard({
   onDeleted: (id: number) => void
 }) {
   const router = useRouter()
+  const { me, hideUntilRated } = useIdentity()
   const [mode, setMode] = useState<'view' | 'edit' | 'confirmDelete'>('view')
   const [deleting, setDeleting] = useState(false)
+  const [revealed, setRevealed] = useState(false)
 
-  const a = avg(show.ratings)
+  // Spoiler verstecken, wenn: Toggle an + ich kenne mich + ich habe noch nicht bewertet
+  const myScore = me ? show.ratings[me] : undefined
+  const spoilerActive = hideUntilRated && !!me && myScore === undefined && !revealed
+
+  const a = avgScore(Object.values(show.ratings))
   const dateStr = new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', {
     day: '2-digit', month: '2-digit', year: 'numeric',
   })
@@ -327,7 +325,15 @@ function ShowCard({
             <p className="text-xs text-zinc-500 mt-0.5">{dateStr}</p>
           </div>
           <div className="flex items-start gap-1 shrink-0">
-            {a !== null && <ScoreRing value={a} size={52} />}
+            {a !== null && (
+              spoilerActive ? (
+                <div className="w-[52px] h-[52px] rounded-full bg-zinc-800/60 border border-dashed border-zinc-700 flex items-center justify-center">
+                  <span className="text-zinc-500 text-lg">👁</span>
+                </div>
+              ) : (
+                <ScoreRing value={a} size={52} />
+              )
+            )}
             {/* Edit-Button — stopPropagation verhindert Navigation zur Detail-Seite */}
             <button
               onClick={e => { e.stopPropagation(); setMode('edit') }}
@@ -342,6 +348,22 @@ function ShowCard({
         </div>
 
         {/* Ratings */}
+        {spoilerActive ? (
+          <div
+            className="flex items-center justify-between gap-2 rounded-xl bg-zinc-800/40 border border-dashed border-zinc-700 px-3 py-2"
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-xs text-zinc-400">
+              Bewertungen versteckt — du hast noch nicht bewertet
+            </p>
+            <button
+              onClick={() => setRevealed(true)}
+              className="text-[10px] uppercase tracking-wider font-bold text-zinc-300 hover:text-zinc-100 px-2 py-1 rounded transition-colors"
+            >
+              Aufdecken
+            </button>
+          </div>
+        ) : (
         <div className="flex flex-wrap gap-1.5">
           {persons.map(p => {
             const note = show.notes?.[p]
@@ -367,6 +389,7 @@ function ShowCard({
             )
           })}
         </div>
+        )}
       </div>
 
       {/* Löschen-Toggle */}
@@ -517,7 +540,7 @@ export default function ShowsPage() {
       {/* Filter-Chips + Show-Liste */}
       <div className="max-w-6xl mx-auto px-4 pb-24 lg:pb-8">
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 scrollbar-none">
-          {FILTERS.map(f => (
+          {SHOW_FILTERS.map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}

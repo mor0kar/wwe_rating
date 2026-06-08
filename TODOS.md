@@ -207,11 +207,54 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-020] Slider-Snap, Spitzname pro Folge, DANHAUSEN in der Übersicht
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Slider rastet auf festen Schritten ein, neues `comment`-Feld pro Show (interner Spitzname), DANHAUSEN-Bewertungen sind in der Übersicht visuell hervorgehoben (Lila-Pills + Hover-Tooltip mit Begründung)
+- **Akzeptanzkriterium:** Slider-Step konfigurierbar; Comment wird in Detail-Header und Übersichts-Card kursiv angezeigt; DANHAUSEN-Pills lila mit Tooltip
+- **Evidenz:** Commits cad3ea6 + a86e8ae — Juni 2026. DB-Migration `db/migrations/002_shows_comment.sql` (neue Spalte `shows.comment`). Slider-Step erst 0.5, dann auf 0.1 zurück (Granularität für Bewertungen). DANHAUSEN-Pills mit `title`-Tooltip in `app/shows/page.tsx`. `npm run build` grün.
+
+---
+
+### [WWE-021] Kalender-Lücken-Hinweis & Aktualisierungs-Erinnerung
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Hinweis auf Wochen, in denen RAW oder SmackDown (noch) fehlt — plus Reminder auf `/shows`, die Kalender-Daten zu pflegen
+- **Akzeptanzkriterium:** `/upcoming` zeigt eine amber-farbene Warnbox mit fehlenden Wochen; auf `/shows` erscheint `CalendarReminder` wenn die Kuratierung älter wird
+- **Evidenz:** Commits 1c289f4 + e7a268d — Juni 2026. `lib/calendar.ts` → `missingShowWeeks()`. `app/components/CalendarReminder.tsx` auf `/shows`. `npm run build` grün.
+
+---
+
+### [WWE-022] Live-machbar-Hinweis für Shows im Kalender
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Im Kalender für jedes Event anzeigen, ob die deutsche Live-Zeit realistisch schaubar ist (z.B. „läuft Sonntag früh 02:00 Uhr DE")
+- **Evidenz:** Commit 8927abb — Juni 2026. `airsOnLabel()` in `lib/calendar.ts`, integriert in `/upcoming`.
+
+---
+
+### [WWE-023] Discord-Benachrichtigungen via Webhook + täglicher Vercel-Cron
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Täglicher Cron prüft, welche Shows heute/morgen laufen und postet eine Erinnerung in einen Discord-Channel — und welche Shows noch zu bewerten sind
+- **Akzeptanzkriterium:** Vercel-Cron `0 7 * * *` triggert `/api/cron/discord`; Webhook postet formatierte Embed-Message; via `CRON_SECRET` geschützt; `?test=1` zur Verifikation
+- **Evidenz:** Commits 8137a48 + 9cb409b — Juni 2026. `app/api/cron/discord/route.ts`, `vercel.json` mit Cron-Eintrag. Env-Vars: `DISCORD_WEBHOOK_URL`, `CRON_SECRET`. `npm run build` grün.
+
+---
+
+### [WWE-024] Codebase-Cleanup & Doku-Refresh
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Duplizierte Konstanten konsolidieren, Docs auf aktuellen Stand bringen, Migration-Konvention dokumentieren
+- **Evidenz:** Juni 2026. `SHOW_TYPES`/`SHOW_FILTERS` zentral in `lib/showStyle.ts`. `avgScore()` zentral in `lib/score.ts` (zwei lokale `avg`-Funktionen entfernt). `db/migrations/README.md` als Konventions-Doku. CLAUDE.md um neue Komponenten/API-Routen/Env-Vars ergänzt. `npm run build` + `tsc --noEmit` grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
-- [ ] Kommentar-Feld pro Bewertung ("was war gut/schlecht") — Priorität: Niedrig
 - [ ] DANHAUSEN Hall of Fame — Ansicht aller ⚡>10-Momente — Priorität: Niedrig
+- [ ] Auto-Import WWE-Terminplan (WWE-008) — Recherche abgeschlossen, wartet auf API-Entscheidung
 
 ---
 

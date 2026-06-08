@@ -1,6 +1,13 @@
 // lib/showStyle.ts
 // Zentrale visuelle Zuordnung pro Show-Typ: Logo, Badge, Akzent-Border, Tönung.
 
+// Alle aktiv genutzten Show-Typen. Reihenfolge = UI-Reihenfolge in Auswahl/Filter.
+export const SHOW_TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM'] as const
+export type ShowType = typeof SHOW_TYPES[number]
+
+// Filter-Optionen für die /shows-Seite (alle Typen + "Alle"-Catch-all).
+export const SHOW_FILTERS = ['Alle', ...SHOW_TYPES] as const
+
 // --- Logos -------------------------------------------------------------
 // Wöchentliche Shows haben ein festes Logo; PLEs werden anhand des Titels
 // (z.B. "SummerSlam", "WrestleMania") auf das Franchise-Logo gemappt.

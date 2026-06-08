@@ -36,18 +36,20 @@ wwe-rater/
 │   │   ├── auth/route.ts        ← PIN-Login Endpoint
 │   │   ├── shows/route.ts       ← Shows GET + POST
 │   │   ├── shows/[id]/route.ts  ← Show PATCH/POST/DELETE + Einzel-Rating
-│   │   └── persons/route.ts     ← Personen GET/POST/DELETE
+│   │   ├── persons/route.ts     ← Personen GET/POST/DELETE
+│   │   └── cron/discord/route.ts ← Vercel-Cron: tägliche Discord-Erinnerung
 │   ├── components/
 │   │   ├── TopNav.tsx           ← Desktop-Navigation (Glas)
 │   │   ├── BottomNav.tsx        ← Mobile Tab-Bar (Glas)
-│   │   └── ScoreRing.tsx        ← SVG-Score-Gauge
+│   │   ├── ScoreRing.tsx        ← SVG-Score-Gauge
+│   │   └── CalendarReminder.tsx ← Reminder, Kalender-Liste zu pflegen
 │   ├── login/page.tsx           ← PIN-Eingabe (public)
 │   ├── shows/
 │   │   ├── page.tsx             ← Show-Liste + "Noch zu bewerten" (Client)
-│   │   ├── add/page.tsx         ← Neue Show erfassen
+│   │   ├── add/page.tsx         ← Neue Show erfassen (Suspense wegen useSearchParams)
 │   │   └── [id]/page.tsx        ← Show-Detail + RatingEditor.tsx
-│   ├── stats/page.tsx           ← Statistiken + Score-Chart (Server Component)
-│   ├── upcoming/page.tsx        ← Kalender mit DE-Zeit (Client)
+│   ├── stats/page.tsx           ← Statistiken + ScoreTimeline (Server Component)
+│   ├── upcoming/page.tsx        ← Kalender mit DE-Zeit + fehlende Wochen (Client)
 │   ├── settings/page.tsx        ← Personen-Verwaltung (Client)
 │   ├── manifest.ts              ← PWA-Manifest
 │   ├── layout.tsx
@@ -56,13 +58,16 @@ wwe-rater/
 ├── lib/
 │   ├── db.ts                    ← postgres.js Client (Supabase, einzige DB-Verbindung)
 │   ├── auth.ts                  ← PIN-Konstanten, checkPin()
-│   ├── calendar.ts              ← getUpcomingEvents() + DE-Zeit-Umrechnung
-│   ├── score.ts                 ← fmt / scoreColor / scoreHex / scoreLabel
-│   └── showStyle.ts             ← getShowLogo + BADGE / BORDER_ACCENT / TINT
-├── proxy.ts                      ← PIN-Schutz für alle Routen (Next.js 16; ex middleware.ts)
+│   ├── calendar.ts              ← getUpcomingEvents, germanWatchTime, missingShowWeeks, airsOnLabel
+│   ├── score.ts                 ← fmt / scoreColor / scoreHex / scoreLabel / avgScore
+│   └── showStyle.ts             ← getShowLogo, BADGE, BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS
+├── proxy.ts                     ← PIN-Schutz für alle Routen (Next.js 16; ex middleware.ts)
+├── vercel.json                  ← Cron-Schedule (täglich 07:00 UTC → /api/cron/discord)
 ├── db/
 │   ├── schema.sql               ← DB-Schema (im Supabase SQL Editor ausführen)
-│   └── seed.js                  ← Einmaliger Import der Excel-Shows
+│   ├── seed.js                  ← Einmaliger Import der Excel-Shows
+│   └── migrations/              ← Nachträgliche Schema-Änderungen (siehe README)
+├── .agents/skills/              ← Projekt-Skills für Agents (aktuell nur Stub)
 └── .claude/
     └── agents/                  ← orchestrator, planner, implementer,
                                     frontend-specialist, backend-specialist,
@@ -105,11 +110,14 @@ Fonts:
 ```sql
 persons (id SERIAL PK, name VARCHAR(100) UNIQUE)
 shows   (id SERIAL PK, type VARCHAR(20) CHECK IN ('RAW','SmackDown','PLE','SNM','NXT'),
-         date DATE, title VARCHAR(200), created_at TIMESTAMPTZ)
+         date DATE, title VARCHAR(200), comment VARCHAR(300), created_at TIMESTAMPTZ)
 ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
-         person_name VARCHAR(100), score DECIMAL(4,2),
+         person_name VARCHAR(100), score DECIMAL(4,2), note TEXT,
          UNIQUE(show_id, person_name))
 ```
+
+- `shows.comment` — interner Spitzname für die Folge ("Die Stuhl-Match-Folge")
+- `ratings.note` — DANHAUSEN-Begründung, wird in der Übersicht als Hover-Tooltip angezeigt
 
 ---
 
@@ -129,7 +137,12 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 - Build Command: `next build`
 - Output Dir: `.next`
 - Node Version: 20
-- Env Vars in Vercel: `POSTGRES_URL`, `APP_PIN`
+- Env Vars in Vercel:
+  - `POSTGRES_URL` — Supabase-Pooler (Port 6543, `pgbouncer=true`)
+  - `APP_PIN` — gemeinsamer Login-PIN
+  - `DISCORD_WEBHOOK_URL` — Channel-Webhook für tägliche Erinnerungen
+  - `CRON_SECRET` — schützt `/api/cron/discord` (Vercel sendet automatisch als `Authorization: Bearer …`)
+- Cron: `vercel.json` triggert täglich 07:00 UTC `/api/cron/discord`
 
 ---
 
@@ -185,8 +198,13 @@ Detaillierter Stand: siehe `TODOS.md`.
 - [x] Rebranding "Squared Circle Ratings" + NXT raus (WWE-011, WWE-012)
 - [x] PLE-Logos (WWE-014)
 - [x] Score-Verlauf als Chart (WWE-017)
+- [x] Slider-Snap, Spitzname pro Folge, DANHAUSEN in Übersicht (WWE-020)
+- [x] Kalender-Lücken-Hinweis & Aktualisierungs-Reminder (WWE-021)
+- [x] Live-machbar-Hinweis im Kalender (WWE-022)
+- [x] Discord-Benachrichtigungen via Webhook + Vercel-Cron (WWE-023)
+- [x] Codebase-Cleanup & Doku-Refresh (WWE-024)
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---
 
-*Letzte Aktualisierung: Mai 2026*
+*Letzte Aktualisierung: Juni 2026*

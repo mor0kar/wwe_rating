@@ -2,8 +2,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { fmt } from '@/lib/score'
-
-const TYPES = ['RAW', 'SmackDown', 'PLE', 'SNM']
+import { SHOW_TYPES } from '@/lib/showStyle'
 
 function AddShowForm() {
   const router = useRouter()
@@ -69,7 +68,7 @@ function AddShowForm() {
         <div>
           <label className="text-xs text-zinc-500 mb-1.5 block">Show-Typ</label>
           <div className="flex gap-2 flex-wrap">
-            {TYPES.map(t => (
+            {SHOW_TYPES.map(t => (
               <button
                 key={t}
                 onClick={() => setType(t)}

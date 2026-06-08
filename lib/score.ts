@@ -28,3 +28,10 @@ export function scoreHex(s: number): string {
 export function scoreLabel(s: number): string {
   return s > 10 ? `⚡${fmt(s)}` : fmt(s)
 }
+
+// Arithmetisches Mittel einer Score-Liste. null wenn leer.
+export function avgScore(scores: number[]): number | null {
+  const valid = scores.filter(v => v != null && !isNaN(v))
+  if (!valid.length) return null
+  return valid.reduce((a, b) => a + b, 0) / valid.length
+}
