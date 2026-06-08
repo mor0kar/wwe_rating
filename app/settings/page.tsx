@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useIdentity, setMe, setHideUntilRated } from '@/lib/identity'
 
 export default function SettingsPage() {
   const [persons, setPersons] = useState<string[]>([])
@@ -9,6 +10,8 @@ export default function SettingsPage() {
   // Name der Person, bei der der Lösch-Bestätigungs-Toggle offen ist
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const { me, hideUntilRated, ready } = useIdentity()
 
   async function loadPersons() {
     const res = await fetch('/api/persons')
@@ -73,6 +76,58 @@ export default function SettingsPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pb-24 lg:pb-8 animate-fade-in">
+      {/* Das bin ich + Spoiler-Schutz */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4">
+        <p className="text-xs text-zinc-500 mb-3">Das bin ich (nur auf diesem Gerät gespeichert)</p>
+        {!ready ? (
+          <div className="h-10 bg-zinc-800/40 rounded-xl animate-pulse" />
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2">
+              {persons.map(p => (
+                <button
+                  key={p}
+                  onClick={() => setMe(me === p ? null : p)}
+                  className={`text-sm px-4 py-2 rounded-xl border transition-colors ${
+                    me === p
+                      ? 'bg-zinc-100 text-zinc-950 border-zinc-100 font-medium'
+                      : 'border-zinc-700 text-zinc-300 hover:border-zinc-500'
+                  }`}
+                >
+                  {me === p && '✓ '}{p}
+                </button>
+              ))}
+            </div>
+            {!me && persons.length > 0 && (
+              <p className="text-xs text-zinc-500 mt-2">
+                Wähle deinen Namen, damit andere Bewertungen versteckt werden bis du selbst bewertet hast.
+              </p>
+            )}
+
+            <label className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-zinc-800 cursor-pointer">
+              <div className="min-w-0">
+                <p className="text-sm text-zinc-100 font-medium">Spoiler verstecken</p>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Andere Bewertungen ausblenden, bis ich selbst bewertet habe.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={hideUntilRated}
+                onChange={e => setHideUntilRated(e.target.checked)}
+                disabled={!me}
+                className="accent-red-600 w-5 h-5 shrink-0 disabled:opacity-40"
+              />
+            </label>
+            {!me && (
+              <p className="text-xs text-zinc-600 mt-2">
+                Spoiler-Schutz funktioniert nur, wenn du oben deinen Namen ausgewählt hast.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Aktuelle Personen */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4">
         <p className="text-xs text-zinc-500 mb-3">Aktuelle Personen</p>

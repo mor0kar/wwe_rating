@@ -2,9 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import sql from '@/lib/db'
 import RatingEditor from './RatingEditor'
+import RatingsView from './RatingsView'
+import HeaderScore from './HeaderScore'
 import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
-import { scoreColor, scoreLabel } from '@/lib/score'
-import ScoreRing from '@/app/components/ScoreRing'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,14 +36,6 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
 
   const scores = ratings.map(r => Number(r.score))
   const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null
-  const spread = scores.length >= 2 ? Math.max(...scores) - Math.min(...scores) : null
-
-  const highestRating = scores.length
-    ? ratings.reduce((best, r) => Number(r.score) >= Number(best.score) ? r : best)
-    : null
-  const lowestRating = scores.length
-    ? ratings.reduce((worst, r) => Number(r.score) <= Number(worst.score) ? r : worst)
-    : null
 
   const dateStr = new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -78,88 +70,21 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
           </div>
           {avg !== null && (
             <div className="flex flex-col items-center shrink-0">
-              <ScoreRing value={avg} size={76} stroke={5} />
+              <HeaderScore avg={avg} ratedBy={ratings.map(r => r.person_name)} />
               <span className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1.5">Schnitt</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Ratings */}
-      <h2 className="text-sm font-medium text-zinc-400 mb-3">Bewertungen</h2>
-      {ratings.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4">
-          <p className="text-sm text-zinc-500">Keine Bewertungen vorhanden.</p>
-        </div>
-      ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4 space-y-3">
-          {ratings.map(r => {
-            const score = Number(r.score)
-            const isDanhausen = !!(r.note && r.note.trim() !== '')
-            return (
-              <div key={r.person_name}>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-100">{r.person_name}</span>
-                  <span className={`text-base font-semibold ${isDanhausen ? 'text-purple-400 font-bold' : scoreColor(score)}`}>
-                    {isDanhausen ? `⚡${scoreLabel(score).replace('⚡', '')}` : scoreLabel(score)}
-                  </span>
-                </div>
-                {isDanhausen && (
-                  <p className="text-xs text-purple-300 italic mt-0.5">⚡ {r.note}</p>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Statistik-Cards */}
-      {ratings.length > 0 && (
-        <>
-          <h2 className="text-sm font-medium text-zinc-400 mb-3">Auswertung</h2>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            {/* Durchschnitt */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-              <p className="text-xs text-zinc-500 mb-1">Ø Durchschnitt</p>
-              <p className={`text-2xl font-semibold ${avg !== null ? scoreColor(avg) : 'text-zinc-50'}`}>
-                {avg !== null ? avg.toFixed(1) : '—'}
-              </p>
-            </div>
-
-            {/* Spread */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-              <p className="text-xs text-zinc-500 mb-1">Spread</p>
-              <p className="text-2xl font-semibold text-zinc-50">
-                {spread !== null ? `±${spread.toFixed(1)}` : '—'}
-              </p>
-            </div>
-          </div>
-
-          {/* Höchste / Niedrigste Bewertung */}
-          {highestRating && lowestRating && highestRating.person_name !== lowestRating.person_name && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Höchste Bewertung</span>
-                <span className="text-sm text-zinc-100">
-                  {highestRating.person_name}{' '}
-                  <span className={`font-semibold ${scoreColor(Number(highestRating.score))}`}>
-                    {scoreLabel(Number(highestRating.score))}
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-500">Niedrigste Bewertung</span>
-                <span className="text-sm text-zinc-100">
-                  {lowestRating.person_name}{' '}
-                  <span className={`font-semibold ${scoreColor(Number(lowestRating.score))}`}>
-                    {scoreLabel(Number(lowestRating.score))}
-                  </span>
-                </span>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      {/* Ratings + Auswertung (Client-Component wegen Spoiler-Logik) */}
+      <RatingsView
+        ratings={ratings.map(r => ({
+          person_name: r.person_name,
+          score: Number(r.score),
+          note: r.note ?? null,
+        }))}
+      />
 
       {/* Bewertungen hinzufügen / anpassen */}
       <RatingEditor
