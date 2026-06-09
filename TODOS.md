@@ -331,6 +331,22 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-034] Kalender-Pflege + benutzerdefinierte Events + 12h/24h-Toggle
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Drei zusammenhängende Verbesserungen am Kalender:
+  (1) Datenpflege gegen offizielle WWE-Ticketseite,
+  (2) User können selbst Events im Kalender anlegen (lokal pro Browser, keine DB),
+  (3) Beim Anlegen kann zwischen 24h und 12h (AM/PM) umgeschaltet werden — wichtig für US/UK-Shows
+- **Akzeptanzkriterium:** Neue Events sichtbar in `/upcoming`; "Event hinzufügen"-Button öffnet Inline-Form; Custom-Events haben "✏️ Custom"-Badge und Entfernen-Button; intern wird immer 24h `HH:mm` gespeichert (kompatibel mit `lib/calendar.ts`)
+- **Evidenz:** Commits `1e01f2e` + `ba83930` — Juni 2026.
+  (1) `lib/calendar.ts`: 07.08. SmackDown Philadelphia, 11.09. SmackDown + 14.09. RAW Mexico City ergänzt; 06.09. Money in the Bank entfernt → Sunday Night's Main Event (Atlanta) eingetragen — `SNM`-Kürzel bleibt generisch, Titel entscheidet Sa/So. `CALENDAR_LAST_UPDATED='2026-06-09'`.
+  (2) Neue `lib/customEvents.ts` mit `useCustomEvents`-Hook (localStorage + Custom-Event-Sync, gleiches Pattern wie `lib/identity.ts`). `app/upcoming/page.tsx`: `CustomEventForm`-Komponente, Custom-Marker und Entfernen-Button im Card-Render, statisches + Custom-Array gemergt und sortiert.
+  (3) 24h/12h-Toggle über dem Zeit-Feld; im 12h-Modus drei Felder (Stunde 1–12, Minute, AM/PM); Helper `to12h()` / `to24h()`; live-Anzeige "Gespeichert: HH:mm (24h)".
+  `npm run build` grün, `npm test` 18/18 grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

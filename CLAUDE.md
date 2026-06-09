@@ -37,20 +37,29 @@ wwe-rater/
 │   │   ├── shows/route.ts       ← Shows GET + POST
 │   │   ├── shows/[id]/route.ts  ← Show PATCH/POST/DELETE + Einzel-Rating
 │   │   ├── persons/route.ts     ← Personen GET/POST/DELETE
-│   │   └── cron/discord/route.ts ← Vercel-Cron: tägliche Discord-Erinnerung
+│   │   ├── cron/discord/route.ts ← Vercel-Cron: tägliche Discord-Erinnerung
+│   │   └── export/route.ts      ← Datenexport CSV/JSON (WWE-028)
 │   ├── components/
 │   │   ├── TopNav.tsx           ← Desktop-Navigation (Glas)
 │   │   ├── BottomNav.tsx        ← Mobile Tab-Bar (Glas)
 │   │   ├── ScoreRing.tsx        ← SVG-Score-Gauge
-│   │   └── CalendarReminder.tsx ← Reminder, Kalender-Liste zu pflegen
+│   │   ├── CalendarReminder.tsx ← Reminder, Kalender-Liste zu pflegen
+│   │   ├── ShowLogo.tsx         ← Zentrales Logo-Rendering mit Badge-Fallback
+│   │   └── PersonRatingRow.tsx  ← Einheitliche Rating-Zeile (Add/Edit/Detail)
 │   ├── login/page.tsx           ← PIN-Eingabe (public)
 │   ├── shows/
-│   │   ├── page.tsx             ← Show-Liste + "Noch zu bewerten" (Client)
+│   │   ├── page.tsx             ← Show-Liste + "Für dich offen" + Client-Filter
 │   │   ├── add/page.tsx         ← Neue Show erfassen (Suspense wegen useSearchParams)
-│   │   └── [id]/page.tsx        ← Show-Detail + RatingEditor.tsx
-│   ├── stats/page.tsx           ← Statistiken + ScoreTimeline (Server Component)
-│   ├── upcoming/page.tsx        ← Kalender mit DE-Zeit + fehlende Wochen (Client)
-│   ├── settings/page.tsx        ← Personen-Verwaltung (Client)
+│   │   └── [id]/                ← Show-Detail
+│   │       ├── page.tsx         ← Server Component
+│   │       ├── RatingEditor.tsx ← Bearbeitungs-Form (Spoiler-aware)
+│   │       ├── RatingsView.tsx  ← Bewertungs-Liste (Spoiler-aware)
+│   │       └── HeaderScore.tsx  ← ScoreRing im Header (Spoiler-aware)
+│   ├── stats/
+│   │   ├── page.tsx             ← Hall of Fame, Awards, Streit-o-Meter
+│   │   └── ScoreTimeline.tsx    ← SVG-Verlauf, antippbare Slices
+│   ├── upcoming/page.tsx        ← Kalender + Custom-Events (12h/24h-Toggle)
+│   ├── settings/page.tsx        ← Personen + "Das bin ich" + Spoiler-Toggle + Export
 │   ├── manifest.ts              ← PWA-Manifest
 │   ├── layout.tsx
 │   ├── page.tsx                 ← Redirect → /shows
@@ -59,10 +68,15 @@ wwe-rater/
 │   ├── db.ts                    ← postgres.js Client (Supabase, einzige DB-Verbindung)
 │   ├── auth.ts                  ← PIN-Konstanten, checkPin()
 │   ├── calendar.ts              ← getUpcomingEvents, germanWatchTime, missingShowWeeks, airsOnLabel
+│   ├── calendar.test.ts         ← Vitest: Zeitzonen / DST / liveFriendly
+│   ├── customEvents.ts          ← useCustomEvents-Hook (localStorage, pro Browser)
+│   ├── identity.ts              ← useIdentity-Hook ("Das bin ich" + Spoiler-Toggle)
 │   ├── score.ts                 ← fmt / scoreColor / scoreHex / scoreLabel / avgScore
-│   └── showStyle.ts             ← getShowLogo, BADGE, BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS
+│   ├── score.test.ts            ← Vitest: Score-Helpers
+│   └── showStyle.ts             ← BADGE, BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS, getShowLogo
 ├── proxy.ts                     ← PIN-Schutz für alle Routen (Next.js 16; ex middleware.ts)
 ├── vercel.json                  ← Cron-Schedule (täglich 07:00 UTC → /api/cron/discord)
+├── vitest.config.ts             ← Test-Setup (lib/*.test.ts)
 ├── db/
 │   ├── schema.sql               ← DB-Schema (im Supabase SQL Editor ausführen)
 │   ├── seed.js                  ← Einmaliger Import der Excel-Shows
@@ -203,6 +217,15 @@ Detaillierter Stand: siehe `TODOS.md`.
 - [x] Live-machbar-Hinweis im Kalender (WWE-022)
 - [x] Discord-Benachrichtigungen via Webhook + Vercel-Cron (WWE-023)
 - [x] Codebase-Cleanup & Doku-Refresh (WWE-024)
+- [x] "Wer bin ich?" + Spoiler-Schutz (WWE-025)
+- [x] Stats-Paket: Hall of Fame, Auszeichnungen, Streit-o-Meter (WWE-026)
+- [x] "Für dich noch offen" — persönliche Bewert-To-Dos (WWE-027)
+- [x] Daten-Export CSV/JSON (WWE-028)
+- [x] Test-Setup Vitest für Zeitzonen-/Score-Logik (WWE-029)
+- [x] Logos zentralisiert (`<ShowLogo>`) + Rating-Editor vereinheitlicht (WWE-030/031)
+- [x] UI/UX-Feinschliff (WWE-032)
+- [x] Score-Verlauf: Punkte zuverlässig antippbar (WWE-033)
+- [x] Kalender-Pflege + Custom-Events + 12h/24h-Toggle (WWE-034)
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---
