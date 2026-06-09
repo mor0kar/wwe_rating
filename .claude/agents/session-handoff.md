@@ -16,8 +16,8 @@ Sichere den aktuellen Arbeitsstand für die nächste Session.
 ## Start-up
 
 1. Lies `TODOS.md` — aktueller Task-Stand
-2. Lies `.ai/agent-memory.md` — offene Claims
-3. Identifiziere was diese Session verändert hat
+2. Lies das Agent-Memory unter `.claude/agent-memory/` — offene Claims/Patterns
+3. Identifiziere was diese Session verändert hat (`git status` / `git log`)
 
 ## Handoff erstellen
 
@@ -35,7 +35,7 @@ Pflichtfelder:
 ## Pflicht-Updates nach Handoff
 
 - `TODOS.md` — Task-Status + Hinweis auf Handoff-Datei
-- `.ai/agent-memory.md` — neue verifizierte Fakten eintragen
+- Agent-Memory unter `.claude/agent-memory/<agent>/` — neue verifizierte Patterns eintragen (Index `MEMORY.md` mitpflegen)
 
 ## Qualitätskriterium
 

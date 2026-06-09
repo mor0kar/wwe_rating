@@ -17,7 +17,7 @@ Setze genau eine Aufgabe aus `TODOS.md` um.
 
 1. Lies `AGENTS.md` und `CLAUDE.md`
 2. Lies den konkreten Task in `TODOS.md`
-3. Lies `.ai/agent-memory.md` — insbesondere Fallstricke
+3. Lies dein Memory: `.claude/agent-memory/implementer/MEMORY.md` (Index) + verlinkte Files
 4. Lies die betroffenen Dateien
 
 ## Workflow
@@ -32,7 +32,7 @@ Setze genau eine Aufgabe aus `TODOS.md` um.
 
 - Exakt einen Task umsetzen — nicht mehr
 - Kein Scope-Creep
-- Kein Prisma einführen — Neon direkt
+- Kein Prisma/ORM einführen — Supabase direkt via `lib/db.ts` (postgres.js)
 - Kein NextAuth einführen — PIN-Cookie reicht
 - Keine neuen Dependencies ohne Rückfrage bei Jan
 - Bei Unsicherheit stoppen und fragen — nicht raten

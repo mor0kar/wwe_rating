@@ -7,7 +7,9 @@ Jeder Agent, jede Session und jede größere Änderung behandelt diese Datei als
 
 ## Projektbeschreibung
 
-**wwe-rater** ist eine private Web-App für Jan und seine Freunde (Foffi, Björn, Curry) zum Bewerten von WWE-Shows (RAW, SmackDown, PLE, SNM, NXT). Ersetzt die bisherige Excel/Google-Sheets-Lösung. PIN-geschützt, mobil-first, hosted auf Vercel.
+**wwe-rater** ("Squared Circle Ratings") ist eine private Web-App für Jan und seine Freunde (Foffi, Björn, Curry) zum Bewerten von WWE-Shows. Ersetzt die bisherige Excel/Google-Sheets-Lösung. PIN-geschützt, mobil-first, hosted auf Vercel.
+
+Aktive Show-Typen: **RAW, SmackDown, PLE, SNM** (zentral in `lib/showStyle.ts` als `SHOW_TYPES`). NXT wurde bewusst entfernt (WWE-012) — nicht wieder einführen.
 
 Scores gehen von 0–10, mit optionalem Overflow bis 15 für legendäre Shows (intern "DANHAUSEN-Skala").
 
@@ -20,7 +22,7 @@ Jeder Agent liest vor produktiver Arbeit in dieser Reihenfolge:
 1. `AGENTS.md`
 2. `CLAUDE.md`
 3. `TODOS.md`
-4. `.ai/agent-memory.md`
+4. `.claude/agent-memory/<agent>/memory.md` (rollenspezifisches Gedächtnis — etablierte Patterns)
 5. Relevante Dateien im aktuellen Scope
 
 ---
@@ -28,13 +30,14 @@ Jeder Agent liest vor produktiver Arbeit in dieser Reihenfolge:
 ## Nicht verhandelbare Projektregeln
 
 - Keine externen Libraries ohne explizite Freigabe durch Jan
-- Kein Prisma — Neon direkt via `@neondatabase/serverless`
-- `DATABASE_URL` immer Pooler-URL mit `pgbouncer=true&connect_timeout=15` — nie `channel_binding=require`
-- Kein NextAuth — PIN-Auth via httpOnly Cookie reicht
+- Kein Prisma / kein ORM — Supabase PostgreSQL direkt via `postgres.js` (`lib/db.ts`, einzige DB-Verbindung)
+- `POSTGRES_URL` immer Supabase-Pooler-URL (Port 6543, `pgbouncer=true`); `lib/db.ts` nutzt `max: 1` + Custom-DATE-Parser (DATE bleibt `YYYY-MM-DD`-String)
+- Kein NextAuth — PIN-Auth via httpOnly Cookie reicht (`lib/auth.ts`, `proxy.ts`)
 - PIN wird niemals geloggt oder in Responses zurückgegeben
-- Score-Range: 0–15 (Slider), in DB als DECIMAL(4,2) speichern
-- Alle Shows und Ratings kommen aus der Datenbank — kein hardcoding
+- Score-Range: 0–15 (Slider 0–10 + optionaler DANHAUSEN-Bonus), in DB als DECIMAL(4,2) speichern
+- Alle Shows und Ratings kommen aus der Datenbank — kein hardcoding (Ausnahme: kuratierte Kalender-Termine in `lib/calendar.ts`, plus user-eigene Events in `lib/customEvents.ts` via localStorage)
 - `db/seed.js` ist einmalig — nie ein zweites Mal ausführen (Duplikat-Schutz via ON CONFLICT vorhanden, aber trotzdem)
+- Schema-Migrationen nie ohne Rückfrage ausführen — als `db/migrations/NNN_*.sql` ablegen + `db/schema.sql` parallel pflegen (siehe `db/migrations/README.md`)
 - Keine neuen Dependencies ohne Rückfrage
 
 ---
@@ -103,8 +106,8 @@ Verantwortlich für:
 Verantwortlich für:
 - API-Routen (`app/api/**`)
 - Datenbankabfragen (`lib/db.ts`)
-- Auth-Logik (`lib/auth.ts`, `middleware.ts`)
-- Schema-Änderungen (`db/schema.sql`)
+- Auth-Logik (`lib/auth.ts`, `proxy.ts` — ex `middleware.ts`, umbenannt für Next.js 16)
+- Schema-Änderungen (`db/schema.sql` + `db/migrations/`)
 
 ### session-handoff
 Verantwortlich für:
@@ -120,10 +123,11 @@ Verantwortlich für:
 
 ## Technischer Rahmen
 
-- Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS v4, Neon PostgreSQL
+- Stack: Next.js 16 (App Router), TypeScript, Tailwind CSS v4, Supabase PostgreSQL (postgres.js)
 - Build: `npm run build`
+- Test: `npm test` (Vitest — `lib/*.test.ts`, Zeitzonen- & Score-Logik)
 - Dev: `npm run dev` → http://localhost:3000
-- Deployment: Vercel
+- Deployment: Vercel (Env: `POSTGRES_URL`, `APP_PIN`, `DISCORD_WEBHOOK_URL`, `CRON_SECRET`)
 
 ---
 
@@ -131,4 +135,5 @@ Verantwortlich für:
 
 Nach jeder Änderung:
 - `npm run build` — TypeScript + Build muss grün sein
+- `npm test` — Vitest muss grün bleiben (bei Änderungen an `lib/calendar.ts` / `lib/score.ts` ggf. Tests ergänzen)
 - Manuell im Browser prüfen: Mobile-Ansicht, PIN-Login, Show hinzufügen

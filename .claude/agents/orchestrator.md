@@ -13,7 +13,7 @@ Du bist der Orchestrator für wwe-rater.
 1. Lies `AGENTS.md`
 2. Lies `CLAUDE.md`
 3. Lies `TODOS.md`
-4. Lies `.ai/agent-memory.md`
+4. Lies das Memory der beteiligten Agents unter `.claude/agent-memory/<agent>/MEMORY.md`
 
 ## Mission
 
@@ -44,4 +44,4 @@ Du bist der Orchestrator für wwe-rater.
 
 Nach jeder Delegation:
 - `TODOS.md` aktualisiert (Status, Evidenz, nächste Schritte)
-- `.ai/agent-memory.md` bei neuen verifizierten Fakten aktualisiert
+- Agent-Memory unter `.claude/agent-memory/<agent>/` bei neuen verifizierten Patterns aktualisiert (Index `MEMORY.md` mitpflegen)

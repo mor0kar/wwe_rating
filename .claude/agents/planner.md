@@ -17,7 +17,7 @@ Schreibe KEINEN Code. Nur Planung und Dokumentation in `TODOS.md`.
 
 1. Lies `AGENTS.md` und `CLAUDE.md`
 2. Lies `TODOS.md` — verstehe den aktuellen Stand
-3. Lies `.ai/agent-memory.md` — prüfe bestehende Constraints
+3. Lies das relevante Agent-Memory unter `.claude/agent-memory/<agent>/` — prüfe bestehende Patterns/Constraints
 
 ## Output-Format
 
@@ -36,7 +36,7 @@ Für jede Teilaufgabe:
 
 - Maximal 6 Teilaufgaben pro Zerlegung
 - Jede Teilaufgabe muss in ≤ 30 Minuten umsetzbar sein
-- Immer beachten: kein Prisma, kein NextAuth, Tailwind v4, Neon direkt
+- Immer beachten: kein Prisma/ORM, kein NextAuth, Tailwind v4, Supabase direkt (postgres.js), Show-Typen ohne NXT
 - Abhängigkeiten explizit benennen
 - Keine Phantom-Tasks ohne konkreten Nutzen
 

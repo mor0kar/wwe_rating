@@ -15,35 +15,40 @@ Keine Breaking Changes an bestehenden API-Contracts ohne Absprache.
 
 ## Start-up
 
-1. Lies `CLAUDE.md` — Tech Stack, kritische Hinweise
+1. Lies `AGENTS.md` + `CLAUDE.md` — Tech Stack, kritische Hinweise
 2. Lies den aktuellen Task in `TODOS.md`
-3. Lies `.ai/agent-memory.md` — Fallstricke, Schema
+3. Lies dein Memory: `.claude/agent-memory/backend-specialist/MEMORY.md` (Index) + verlinkte Files
 
 ## Kritische Constraints
 
-- **Neon direkt** via `import sql from '@/lib/db'` — kein Prisma, kein Drizzle
-- **DATABASE_URL** muss Pooler-URL sein: `pgbouncer=true&connect_timeout=15`, KEIN `channel_binding=require`
+- **Supabase + postgres.js** via `import sql from '@/lib/db'` — kein Prisma, kein Drizzle, kein Neon
+- **POSTGRES_URL** muss Supabase-Pooler sein (Port 6543, `pgbouncer=true`), KEIN `channel_binding=require`
+- `lib/db.ts`: `max: 1` + Custom-DATE-Parser (DATE bleibt `YYYY-MM-DD`-String)
 - **PIN-Auth** via httpOnly Cookie — kein JWT, kein NextAuth
-- `middleware.ts` schützt alle Routen außer `/login` und `/api/auth`
+- `proxy.ts` (ex `middleware.ts`) schützt alle Routen außer `/login`, `/api/auth`, `/api/cron`
 - Score als `DECIMAL(4,2)` speichern, beim Lesen mit `Number()` casten
-- UNIQUE Constraint auf `(show_id, person_name)` in ratings — bei Updates `ON CONFLICT DO UPDATE`
+- UNIQUE `(show_id, person_name)` in ratings — Einzel-Upsert via POST `ON CONFLICT DO UPDATE`
+- **PATCH /api/shows/[id] ersetzt ALLE Ratings** — für Einzel-Rating POST nutzen (siehe Memory)
+- Schema-Migrationen nie ohne Rückfrage; als `db/migrations/NNN_*.sql` + `db/schema.sql` pflegen
 
-## DB-Schema (Referenz)
+## DB-Schema (Referenz — Details im Memory)
 
 ```sql
 persons (id, name UNIQUE)
-shows   (id, type CHECK IN ('RAW','SmackDown','PLE','SNM','NXT'), date, title, created_at)
-ratings (id, show_id FK, person_name, score DECIMAL(4,2), UNIQUE(show_id, person_name))
+shows   (id, type CHECK IN ('RAW','SmackDown','PLE','SNM','NXT'), date, title, comment, created_at)
+ratings (id, show_id FK CASCADE, person_name, score DECIMAL(4,2), note, UNIQUE(show_id, person_name))
 ```
+NXT historisch im CHECK, wird aber nicht mehr genutzt.
 
 ## API-Contracts (bestehend — nicht brechen)
 
-- `GET  /api/shows?type=all|RAW|...` → Show[] mit eingebetteten ratings
-- `POST /api/shows` → { type, date, title, ratings: Record<string, number> }
-- `GET  /api/persons` → string[]
-- `POST /api/persons` → { name }
-- `DELETE /api/persons` → { name }
+- `GET  /api/shows?type=all|RAW|...` → Show[] mit eingebetteten ratings + notes
+- `POST /api/shows` → { type, date, title?, comment?, ratings, notes? }
+- `PATCH /api/shows/[id]` → ersetzt alle Ratings | `POST /api/shows/[id]` → { person, score, note? } UPSERT
+- `DELETE /api/shows/[id]`
+- `GET/POST/DELETE /api/persons`
 - `POST /api/auth` → { pin } → setzt Cookie
+- `GET /api/cron/discord` (CRON_SECRET) · `GET /api/export` (CSV/JSON)
 
 ## Validierung
 

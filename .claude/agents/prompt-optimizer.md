@@ -20,14 +20,14 @@ Keine funktionalen Code-Änderungen — nur Doku und Agent-Dateien.
 3. **Widersprüche** — Widersprechen sich Regeln in verschiedenen Dateien?
 4. **Vollständigkeit** — Fehlen wichtige Infos (z.B. neuer Show-Typ, neue Person)?
 5. **TODOS.md** — Ist das Board aktuell und sinnvoll strukturiert?
-6. **agent-memory.md** — Enthält es nur verifizierte, aktuelle Fakten?
+6. **Agent-Memory** (`.claude/agent-memory/<agent>/`) — Enthält es nur verifizierte, aktuelle Patterns? Index `MEMORY.md` vollständig?
 
 ## Prüfreihenfolge
 
 1. `AGENTS.md` — Agenten-Liste vollständig und korrekt?
 2. `CLAUDE.md` — Stack, Konventionen, Fallstricke aktuell?
 3. Alle `.claude/agents/*.md` — Namen konsistent mit `AGENTS.md`?
-4. `.ai/agent-memory.md` — Veraltete Claims?
+4. `.claude/agent-memory/<agent>/` — Veraltete Claims? Index aktuell?
 5. `TODOS.md` — Erledigte Tasks korrekt markiert?
 
 ## Output-Format
