@@ -250,11 +250,56 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-025] „Wer bin ich?" + Spoiler-Schutz
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Lokale Identität pro Browser (kein Account) + Option, fremde Bewertungen zu verstecken, bis man selbst bewertet hat — beantwortet die offene Frage „einzeln vs. gemeinsam bewerten"
+- **Akzeptanzkriterium:** In den Settings wählbarer Name (localStorage) + „Spoiler verstecken"-Toggle; `/shows` und der Detail-`RatingEditor` blenden fremde Wertungen aus und speichern die eigene per Upsert
+- **Evidenz:** Juni 2026 (Commits 8551a7f + a92002a). `lib/identity.ts` (`useIdentity`, `setMe`, `setHideUntilRated`), Integration in `app/settings/page.tsx`, `app/shows/page.tsx`, `app/shows/[id]/RatingEditor.tsx`. Nachträglich dokumentiert.
+
+---
+
+### [WWE-026] Stats-Paket: DANHAUSEN Hall of Fame, Auszeichnungen, Streit-o-Meter
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Mehr Spaß aus den vorhandenen Bewertungsdaten — ohne Schema-Änderung
+- **Akzeptanzkriterium:** `/stats` zeigt (1) alle ⚡>10-Momente mit Begründung, (2) Kritiker-Auszeichnungen (Hype-Train / Härtester Kritiker / Eigenbrötler), (3) Top-3 kontroverseste Shows (größte Spannweite)
+- **Evidenz:** Juni 2026. `app/stats/page.tsx`: `getStats()` um `danhausenMoments`, `controversialShows`, `awards` (mittlere Abweichung vom Show-Schnitt) erweitert; drei neue Sektionen + `AwardCard`. `npm run build` grün.
+
+---
+
+### [WWE-027] „Für dich noch offen" (persönliche Bewert-To-Dos)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Ergänzt WWE-016 um die Personen-Ebene — angelegte Shows, die ICH (laut Identität) noch nicht bewertet habe
+- **Akzeptanzkriterium:** Auf `/shows` listet eine eigene Sektion meine offenen Shows (nur wenn in Settings ein Name gewählt ist) und verlinkt auf die spoiler-fähige Detailseite
+- **Evidenz:** Juni 2026. `app/shows/page.tsx`: `allShows` statt nur `existingKeys`, `myPending = allShows.filter(s => !(me in s.ratings))`, amber-Sektion. Nutzt bestehendes `useIdentity()`. `npm run build` grün.
+
+---
+
+### [WWE-028] Daten-Export / Backup (CSV + JSON)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** „Excel-Ersatz"-Sicherheitsnetz — alle Shows + Bewertungen exportierbar
+- **Akzeptanzkriterium:** `/api/export` liefert CSV (Excel-tauglich, BOM, LEFT JOIN → auch Shows ohne Wertung) bzw. `?format=json` ein Voll-Backup; Buttons in den Settings; hinter PIN-Proxy
+- **Evidenz:** Juni 2026. `app/api/export/route.ts` (force-dynamic, CSV-Escaping + BOM), Export-Card in `app/settings/page.tsx`. `npm run build` grün.
+
+---
+
+### [WWE-029] Test-Setup (Vitest) für Zeitzonen- & Score-Logik
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Erste Unit-Tests für die fehleranfälligste reine Logik (DST, Tagesversatz, +30-Min-Offset, Score-Formatierung)
+- **Akzeptanzkriterium:** `npm test` läuft grün; Tests decken `lib/calendar.ts` (zonedInstant, eventInstant, germanWatchTime, localStartTime) und `lib/score.ts` ab
+- **Evidenz:** Juni 2026. Vitest als Dev-Dependency (mit Jan freigegeben). `vitest.config.ts`, `lib/score.test.ts`, `lib/calendar.test.ts` — 18 Tests grün. Scripts `test` / `test:watch`. `npm run build` grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
-- [ ] DANHAUSEN Hall of Fame — Ansicht aller ⚡>10-Momente — Priorität: Niedrig
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — Recherche abgeschlossen, wartet auf API-Entscheidung
+- [x] DANHAUSEN Hall of Fame — erledigt via WWE-026 (Sektion auf `/stats`)
 
 ---
 
