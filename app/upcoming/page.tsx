@@ -8,6 +8,7 @@ import {
   airsOnLabel,
   missingShowWeeks,
   isValidTz,
+  TZ_OPTIONS,
   type CalendarEvent,
 } from '@/lib/calendar'
 import { BORDER_ACCENT, SHOW_TYPES } from '@/lib/showStyle'
@@ -48,11 +49,14 @@ function isCustom(ev: CalendarEvent): ev is CustomEvent {
 
 type ExistingShow = { id: number; hasRatings: boolean }
 
-// Browser-Default-Zeitzone (z.B. Europe/Berlin). Reicht für selbst eingetragene
-// Events — wer Custom-Events anlegt, hat meistens die deutsche Zeit im Kopf.
-function browserTz(): string {
-  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Berlin' }
-  catch { return 'Europe/Berlin' }
+// Default-Zeitzone fürs Dropdown: Browser-Zone wenn sie in TZ_OPTIONS vorkommt,
+// sonst Europe/Berlin. So ist die Auswahl immer ein gültiger Listenwert.
+function defaultTz(): string {
+  let browser = 'Europe/Berlin'
+  try { browser = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Berlin' }
+  catch { /* Fallback bleibt Berlin */ }
+  const known = TZ_OPTIONS.flatMap(g => g.zones).some(z => z.value === browser)
+  return known ? browser : 'Europe/Berlin'
 }
 
 // 24h "HH:mm" → 12h-Komponenten
@@ -78,7 +82,7 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
   const [city, setCity] = useState('')
   const [localTime, setLocalTime] = useState('20:00')
   const [timeFormat, setTimeFormat] = useState<'24h' | '12h'>('24h')
-  const [tz, setTz] = useState(browserTz())
+  const [tz, setTz] = useState(defaultTz())
   const [error, setError] = useState('')
 
   const tp = to12h(localTime)
@@ -247,16 +251,22 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
       </div>
 
       <div>
-        <label className="text-xs text-zinc-500 mb-1 block">Zeitzone (IANA)</label>
-        <input
-          type="text"
+        <label className="text-xs text-zinc-500 mb-1 block">Zeitzone</label>
+        <select
           value={tz}
-          onChange={e => setTz(e.target.value)}
-          placeholder="Europe/Berlin, America/New_York, ..."
-          className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-50 font-mono outline-none focus:border-zinc-500 placeholder:text-zinc-600"
-        />
+          onChange={e => { setTz(e.target.value); setError('') }}
+          className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-50 outline-none focus:border-zinc-500 min-h-[44px]"
+        >
+          {TZ_OPTIONS.map(group => (
+            <optgroup key={group.group} label={group.group}>
+              {group.zones.map(z => (
+                <option key={z.value} value={z.value}>{z.label}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
         <p className="text-[10px] text-zinc-600 mt-1">
-          Standard ist deine Browser-Zeitzone. Für US-Shows z.B. America/New_York.
+          Zeitzone des Veranstaltungsorts — die deutsche Live-Zeit wird daraus berechnet.
         </p>
       </div>
 

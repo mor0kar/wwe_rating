@@ -23,6 +23,49 @@ export type CalendarEvent = {
 // Standard-Annahme, falls keine lokale Startzeit hinterlegt ist.
 const DEFAULT_LOCAL_TIME = '20:00'
 
+// Kuratierte Zeitzonen-Auswahl für das Custom-Event-Dropdown.
+// Deckt alle im Kalender genutzten Zonen + typische WWE-Tour-Locations ab.
+// `value` = gültige IANA-Zone, `label` = menschenlesbar (für das <select>).
+export const TZ_OPTIONS: { group: string; zones: { value: string; label: string }[] }[] = [
+  {
+    group: 'Europa',
+    zones: [
+      { value: 'Europe/Berlin', label: 'Deutschland (Berlin)' },
+      { value: 'Europe/London', label: 'UK (London)' },
+      { value: 'Europe/Paris', label: 'Frankreich (Paris)' },
+      { value: 'Europe/Rome', label: 'Italien (Rom)' },
+      { value: 'Europe/Madrid', label: 'Spanien (Madrid)' },
+    ],
+  },
+  {
+    group: 'USA & Kanada',
+    zones: [
+      { value: 'America/New_York', label: 'US Eastern (New York)' },
+      { value: 'America/Detroit', label: 'US Eastern (Detroit)' },
+      { value: 'America/Chicago', label: 'US Central (Chicago)' },
+      { value: 'America/Denver', label: 'US Mountain (Denver)' },
+      { value: 'America/Phoenix', label: 'US Arizona (Phoenix)' },
+      { value: 'America/Los_Angeles', label: 'US Pacific (Los Angeles)' },
+      { value: 'America/Toronto', label: 'Kanada Ost (Toronto)' },
+      { value: 'America/Edmonton', label: 'Kanada (Edmonton)' },
+    ],
+  },
+  {
+    group: 'Lateinamerika',
+    zones: [
+      { value: 'America/Mexico_City', label: 'Mexiko (Mexiko-Stadt)' },
+    ],
+  },
+  {
+    group: 'Naher Osten & weitere',
+    zones: [
+      { value: 'Asia/Riyadh', label: 'Saudi-Arabien (Riad)' },
+      { value: 'Asia/Tokyo', label: 'Japan (Tokio)' },
+      { value: 'Australia/Sydney', label: 'Australien (Sydney)' },
+    ],
+  },
+]
+
 // Die WWE-Ticketseite listet die Einlass-/Listenzeit; der eigentliche Show-Start
 // (Bell) ist erfahrungsgemäß ~30 Min später. Offset wird auf hinterlegte
 // localTime-Werte addiert (nicht auf den Default).
