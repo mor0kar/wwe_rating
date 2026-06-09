@@ -54,6 +54,21 @@ function browserTz(): string {
   catch { return 'Europe/Berlin' }
 }
 
+// 24h "HH:mm" → 12h-Komponenten
+function to12h(hhmm: string): { h: number; m: number; period: 'AM' | 'PM' } {
+  const [h24, m] = hhmm.split(':').map(Number)
+  const period: 'AM' | 'PM' = h24 >= 12 ? 'PM' : 'AM'
+  const h = ((h24 + 11) % 12) + 1 // 0→12, 13→1, ...
+  return { h, m: isNaN(m) ? 0 : m, period }
+}
+
+// 12h-Komponenten → 24h "HH:mm"
+function to24h(h: number, m: number, period: 'AM' | 'PM'): string {
+  let h24 = h % 12
+  if (period === 'PM') h24 += 12
+  return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
 function CustomEventForm({ onDone }: { onDone: () => void }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [type, setType] = useState<'RAW' | 'SmackDown' | 'PLE' | 'SNM'>('RAW')
@@ -61,8 +76,13 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
   const [venue, setVenue] = useState('')
   const [city, setCity] = useState('')
   const [localTime, setLocalTime] = useState('20:00')
+  const [timeFormat, setTimeFormat] = useState<'24h' | '12h'>('24h')
   const [tz, setTz] = useState(browserTz())
   const [error, setError] = useState('')
+
+  const tp = to12h(localTime)
+  const setFrom12h = (h: number, m: number, p: 'AM' | 'PM') =>
+    setLocalTime(to24h(Math.max(1, Math.min(12, h)), Math.max(0, Math.min(59, m)), p))
 
   function handleSave() {
     if (!city.trim()) { setError('Stadt ist Pflicht.'); return }
@@ -113,13 +133,78 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
           />
         </div>
         <div>
-          <label className="text-xs text-zinc-500 mb-1 block">Lokale Startzeit</label>
-          <input
-            type="time"
-            value={localTime}
-            onChange={e => setLocalTime(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-50 outline-none focus:border-zinc-500"
-          />
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs text-zinc-500">Lokale Startzeit</label>
+            <div className="flex bg-zinc-950 border border-zinc-700 rounded-lg overflow-hidden text-[10px]">
+              <button
+                type="button"
+                onClick={() => setTimeFormat('24h')}
+                className={`px-2 py-0.5 transition-colors ${
+                  timeFormat === '24h' ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                24h
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimeFormat('12h')}
+                className={`px-2 py-0.5 transition-colors ${
+                  timeFormat === '12h' ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                12h
+              </button>
+            </div>
+          </div>
+          {timeFormat === '24h' ? (
+            <input
+              type="time"
+              value={localTime}
+              onChange={e => setLocalTime(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-50 outline-none focus:border-zinc-500"
+            />
+          ) : (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={tp.h}
+                onChange={e => setFrom12h(parseInt(e.target.value) || 1, tp.m, tp.period)}
+                className="w-12 bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-2 text-sm text-zinc-50 text-center outline-none focus:border-zinc-500"
+              />
+              <span className="text-zinc-500">:</span>
+              <input
+                type="number"
+                min={0}
+                max={59}
+                value={String(tp.m).padStart(2, '0')}
+                onChange={e => setFrom12h(tp.h, parseInt(e.target.value) || 0, tp.period)}
+                className="w-12 bg-zinc-950 border border-zinc-700 rounded-xl px-2 py-2 text-sm text-zinc-50 text-center outline-none focus:border-zinc-500"
+              />
+              <div className="flex bg-zinc-950 border border-zinc-700 rounded-xl overflow-hidden ml-1">
+                <button
+                  type="button"
+                  onClick={() => setFrom12h(tp.h, tp.m, 'AM')}
+                  className={`px-2 py-2 text-xs transition-colors ${
+                    tp.period === 'AM' ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  AM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFrom12h(tp.h, tp.m, 'PM')}
+                  className={`px-2 py-2 text-xs transition-colors ${
+                    tp.period === 'PM' ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  PM
+                </button>
+              </div>
+            </div>
+          )}
+          <p className="text-[10px] text-zinc-600 mt-1">Gespeichert: {localTime} (24h)</p>
         </div>
       </div>
 
