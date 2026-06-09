@@ -73,6 +73,7 @@ const EVENTS: CalendarEvent[] = [
   { date: '2026-08-01', type: 'PLE', title: 'SummerSlam (Night One)', venue: 'U.S. Bank Stadium', city: 'Minneapolis, MN', tz: 'America/Chicago', localTime: '16:30' },
   { date: '2026-08-02', type: 'PLE', title: 'SummerSlam (Night Two)', venue: 'U.S. Bank Stadium', city: 'Minneapolis, MN', tz: 'America/Chicago', localTime: '16:30' },
   { date: '2026-08-03', type: 'RAW', venue: "Casey's Center", city: 'Des Moines, IA', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-08-07', type: 'SmackDown', venue: 'Xfinity Mobile Arena', city: 'Philadelphia, PA', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-08-10', type: 'RAW', venue: 'Scope Arena', city: 'Norfolk, VA', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-08-17', type: 'RAW', venue: 'KeyBank Center', city: 'Buffalo, NY', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-08-21', type: 'SmackDown', venue: 'Scotiabank Arena', city: 'Toronto, Canada', tz: 'America/Toronto', localTime: '19:30' },
@@ -82,8 +83,10 @@ const EVENTS: CalendarEvent[] = [
 
   // September
   { date: '2026-09-04', type: 'SmackDown', venue: 'Heritage Bank Center', city: 'Cincinnati, OH', tz: 'America/New_York', localTime: '19:30' },
-  { date: '2026-09-06', type: 'PLE', title: 'Money in the Bank', venue: 'Smoothie King Center', city: 'New Orleans, LA', tz: 'America/Chicago', localTime: '19:00' },
+  { date: '2026-09-06', type: 'SNM', title: "Sunday Night's Main Event", venue: 'State Farm Arena', city: 'Atlanta, GA', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-09-07', type: 'RAW', venue: 'Legacy Arena', city: 'Birmingham, AL', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-09-11', type: 'SmackDown', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '19:00' },
+  { date: '2026-09-14', type: 'RAW', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '19:00' },
 ]
 
 export function getUpcomingEvents(): CalendarEvent[] {
@@ -91,7 +94,7 @@ export function getUpcomingEvents(): CalendarEvent[] {
 }
 
 // Datum, an dem die Liste zuletzt aktualisiert wurde (bei jeder Pflege anpassen).
-export const CALENDAR_LAST_UPDATED = '2026-06-01'
+export const CALENDAR_LAST_UPDATED = '2026-06-09'
 
 // Erinnerung auslösen, wenn weniger als so viele Tage Vorlauf bleiben …
 const REFRESH_RUNWAY_DAYS = 28
