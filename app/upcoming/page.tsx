@@ -13,7 +13,7 @@ import {
 } from '@/lib/calendar'
 import { BORDER_ACCENT, SHOW_TYPES } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
-import { useCustomEvents, addCustomEvent, removeCustomEvent, type CustomEvent } from '@/lib/customEvents'
+import { useCustomEvents, addCustomEvent, updateCustomEvent, removeCustomEvent, type CustomEvent } from '@/lib/customEvents'
 
 const MONTH_NAMES: Record<number, string> = {
   1: 'Januar', 2: 'Februar', 3: 'März', 4: 'April',
@@ -74,15 +74,16 @@ function to24h(h: number, m: number, period: 'AM' | 'PM'): string {
   return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-function CustomEventForm({ onDone }: { onDone: () => void }) {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [type, setType] = useState<'RAW' | 'SmackDown' | 'PLE' | 'SNM'>('RAW')
-  const [title, setTitle] = useState('')
-  const [venue, setVenue] = useState('')
-  const [city, setCity] = useState('')
-  const [localTime, setLocalTime] = useState('20:00')
+function CustomEventForm({ onDone, editing }: { onDone: () => void; editing?: CustomEvent }) {
+  const isEdit = !!editing
+  const [date, setDate] = useState(editing?.date ?? new Date().toISOString().split('T')[0])
+  const [type, setType] = useState<'RAW' | 'SmackDown' | 'PLE' | 'SNM'>(editing?.type ?? 'RAW')
+  const [title, setTitle] = useState(editing?.title ?? '')
+  const [venue, setVenue] = useState(editing?.venue ?? '')
+  const [city, setCity] = useState(editing?.city ?? '')
+  const [localTime, setLocalTime] = useState(editing?.localTime ?? '20:00')
   const [timeFormat, setTimeFormat] = useState<'24h' | '12h'>('24h')
-  const [tz, setTz] = useState(defaultTz())
+  const [tz, setTz] = useState(editing?.tz ?? defaultTz())
   const [error, setError] = useState('')
 
   const tp = to12h(localTime)
@@ -95,7 +96,7 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
       setError('Ungültige Zeitzone. Beispiel: Europe/Berlin oder America/New_York.')
       return
     }
-    addCustomEvent({
+    const payload = {
       date,
       type,
       title: title.trim() || undefined,
@@ -103,14 +104,16 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
       city: city.trim(),
       tz: tz.trim(),
       localTime,
-    })
+    }
+    if (isEdit && editing) updateCustomEvent(editing.id, payload)
+    else addCustomEvent(payload)
     onDone()
   }
 
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-sm font-semibold text-zinc-100">Eigenes Event anlegen</h3>
+        <h3 className="text-sm font-semibold text-zinc-100">{isEdit ? 'Event bearbeiten' : 'Eigenes Event anlegen'}</h3>
         <button onClick={onDone} className="text-xs text-zinc-500 hover:text-zinc-300 min-h-[44px] min-w-[44px]">Abbrechen</button>
       </div>
 
@@ -295,6 +298,8 @@ export default function UpcomingPage() {
   const today = new Date().toISOString().split('T')[0]
   const { events: customEvents } = useCustomEvents()
   const [showForm, setShowForm] = useState(false)
+  // Aktuell zu bearbeitendes Custom-Event (null = Form ist im Anlege-Modus)
+  const [editingEvent, setEditingEvent] = useState<CustomEvent | null>(null)
   // Statische + benutzerdefinierte Events nach Datum sortiert
   const events = [...getUpcomingEvents(), ...customEvents].sort((a, b) => a.date.localeCompare(b.date))
 
@@ -436,16 +441,25 @@ export default function UpcomingPage() {
             </button>
           )}
           {isCustom(ev) && (
-            <button
-              onClick={() => {
-                if (confirm(`"${ev.title || ev.type}" am ${ev.date} entfernen?`)) {
-                  removeCustomEvent(ev.id)
-                }
-              }}
-              className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors"
-            >
-              Entfernen
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setEditingEvent(ev); setShowForm(true) }}
+                className="text-[10px] text-zinc-500 hover:text-zinc-200 transition-colors"
+              >
+                Bearbeiten
+              </button>
+              <span className="text-zinc-700 text-[10px]">·</span>
+              <button
+                onClick={() => {
+                  if (confirm(`"${ev.title || ev.type}" am ${ev.date} entfernen?`)) {
+                    removeCustomEvent(ev.id)
+                  }
+                }}
+                className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors"
+              >
+                Entfernen
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -467,7 +481,7 @@ export default function UpcomingPage() {
           </div>
           {!showForm && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { setEditingEvent(null); setShowForm(true) }}
               className="shrink-0 flex items-center gap-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-2 rounded-xl transition-colors min-h-[44px]"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
@@ -481,7 +495,10 @@ export default function UpcomingPage() {
 
       {showForm && (
         <div className="max-w-6xl mx-auto px-4 mb-6">
-          <CustomEventForm onDone={() => setShowForm(false)} />
+          <CustomEventForm
+            editing={editingEvent ?? undefined}
+            onDone={() => { setShowForm(false); setEditingEvent(null) }}
+          />
         </div>
       )}
 

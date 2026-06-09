@@ -42,6 +42,11 @@ export function addCustomEvent(ev: Omit<CalendarEvent, never>): CustomEvent {
   return created
 }
 
+// Bestehendes Custom-Event aktualisieren (ID + custom-Flag bleiben erhalten).
+export function updateCustomEvent(id: string, ev: Omit<CalendarEvent, never>) {
+  write(read().map(e => (e.id === id ? { ...ev, id, custom: true } : e)))
+}
+
 export function removeCustomEvent(id: string) {
   write(read().filter(e => e.id !== id))
 }
