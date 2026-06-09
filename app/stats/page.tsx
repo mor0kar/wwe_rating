@@ -1,12 +1,12 @@
 import sql from '@/lib/db'
 import { getShowLogo, BADGE, SHOW_TYPES } from '@/lib/showStyle'
-import { scoreColor, avgScore } from '@/lib/score'
+import { scoreColor, avgScore, scoreLabel } from '@/lib/score'
 import ScoreTimeline from './ScoreTimeline'
 
 export const dynamic = 'force-dynamic'
 
 type ShowRow = { id: number; type: string; date: string; title: string }
-type RatingRow = { show_id: number; person_name: string; score: number }
+type RatingRow = { show_id: number; person_name: string; score: number; note: string | null }
 type PersonRow = { name: string }
 
 async function getStats() {
@@ -50,6 +50,56 @@ async function getStats() {
     .filter((s): s is { id: number; date: string; type: string; title: string; avg: number } => s.avg !== null)
     .sort((a, b) => a.date.localeCompare(b.date))
 
+  // DANHAUSEN-Momente: alle Einzelwertungen > 10 (Overflow-Skala) inkl. Begründung
+  const danhausenMoments = ratings
+    .filter(r => Number(r.score) > 10)
+    .map(r => {
+      const show = shows.find(s => s.id === r.show_id)
+      return {
+        person: r.person_name,
+        score: Number(r.score),
+        note: r.note ?? null,
+        type: show?.type ?? '',
+        title: show?.title ?? '',
+        date: show?.date ?? '',
+      }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  // Streit-o-Meter: Shows mit der größten Spannweite zwischen den Wertungen
+  const controversialShows = showsWithRatings
+    .map(s => {
+      const sc = Object.values(s.ratings)
+      if (sc.length < 2) return null
+      const max = Math.max(...sc)
+      const min = Math.min(...sc)
+      return { id: s.id, type: s.type, title: s.title, date: s.date, spread: max - min, max, min }
+    })
+    .filter((s): s is { id: number; type: string; title: string; date: string; spread: number; max: number; min: number } => s !== null)
+    .sort((a, b) => b.spread - a.spread)
+    .slice(0, 3)
+
+  // Kritiker-Typen: durchschnittliche Abweichung jeder Person vom jeweiligen Show-Schnitt
+  const showAvgById = new Map<number, number>()
+  for (const s of showsWithRatings) {
+    const a = avgScore(Object.values(s.ratings))
+    if (a !== null) showAvgById.set(s.id, a)
+  }
+  const deviations = persons
+    .map(p => {
+      const devs = ratings
+        .filter(r => r.person_name === p.name && showAvgById.has(r.show_id))
+        .map(r => Math.abs(Number(r.score) - showAvgById.get(r.show_id)!))
+      return { name: p.name, dev: devs.length ? devs.reduce((a, b) => a + b, 0) / devs.length : null }
+    })
+    .filter((p): p is { name: string; dev: number } => p.dev !== null)
+
+  const awards = {
+    hypeTrain: personStats.length >= 2 ? personStats[0] : null,
+    hardest: personStats.length >= 2 ? personStats[personStats.length - 1] : null,
+    contrarian: deviations.length >= 2 ? [...deviations].sort((a, b) => b.dev - a.dev)[0] : null,
+  }
+
   return {
     globalAvg,
     pleAvg: avgScore(pleScores),
@@ -60,6 +110,9 @@ async function getStats() {
     flopShows: [...showAvgs].reverse().slice(0, 3),
     typeStats,
     timeline,
+    danhausenMoments,
+    controversialShows,
+    awards,
   }
 }
 
@@ -98,6 +151,22 @@ function rankBadge(i: number) {
   return 'text-zinc-500'
 }
 
+// Auszeichnungs-Karte für die Kritiker-Typen
+function AwardCard({ emoji, label, name, detail, accent }: {
+  emoji: string; label: string; name: string; detail: string; accent: string
+}) {
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center gap-3">
+      <span className="text-3xl shrink-0" aria-hidden>{emoji}</span>
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</p>
+        <p className={`font-heading text-lg font-bold truncate ${accent}`}>{name}</p>
+        <p className="text-xs text-zinc-500">{detail}</p>
+      </div>
+    </div>
+  )
+}
+
 export default async function StatsPage() {
   const stats = await getStats()
 
@@ -131,6 +200,32 @@ export default async function StatsPage() {
           ))}
         </div>
 
+        {/* DANHAUSEN-Momente: alle Overflow-Wertungen >10 mit Begründung */}
+        {stats.danhausenMoments.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide mb-3">
+              ⚡ DANHAUSEN-Momente
+            </h2>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+              {stats.danhausenMoments.map((m, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="font-heading text-2xl font-bold text-purple-400 tabular-nums shrink-0">
+                    {scoreLabel(m.score)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {showTypeBadge(m.type, 'h-3.5', m.title)}
+                      <span className="text-sm text-zinc-100 truncate">{m.title || m.type}</span>
+                      <span className="text-xs text-zinc-500">· {m.person}</span>
+                    </div>
+                    {m.note && <p className="text-xs text-zinc-400 italic mt-0.5">„{m.note}"</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Score-Verlauf über die Saison */}
         {stats.timeline.length >= 2 && (
           <div className="mb-8">
@@ -145,6 +240,26 @@ export default async function StatsPage() {
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
               <ScoreTimeline data={stats.timeline} globalAvg={stats.globalAvg} />
+            </div>
+          </div>
+        )}
+
+        {/* Auszeichnungen: Kritiker-Typen aus dem Bewertungsverhalten */}
+        {(stats.awards.hypeTrain || stats.awards.hardest || stats.awards.contrarian) && (
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide mb-3">
+              Auszeichnungen
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {stats.awards.hypeTrain && (
+                <AwardCard emoji="🚂" label="Hype-Train" name={stats.awards.hypeTrain.name} detail={`Ø ${stats.awards.hypeTrain.avg!.toFixed(1)} — vergibt am meisten`} accent="text-green-400" />
+              )}
+              {stats.awards.hardest && (
+                <AwardCard emoji="🧊" label="Härtester Kritiker" name={stats.awards.hardest.name} detail={`Ø ${stats.awards.hardest.avg!.toFixed(1)} — am strengsten`} accent="text-red-400" />
+              )}
+              {stats.awards.contrarian && (
+                <AwardCard emoji="🃏" label="Eigenbrötler" name={stats.awards.contrarian.name} detail={`Ø ±${stats.awards.contrarian.dev.toFixed(1)} vom Gruppenschnitt`} accent="text-purple-400" />
+              )}
             </div>
           </div>
         )}
@@ -276,6 +391,34 @@ export default async function StatsPage() {
             </div>
           </div>
         </div>
+
+        {/* Streit-o-Meter: größte Uneinigkeit zwischen den Wertungen */}
+        {stats.controversialShows.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide mb-1">
+              Streit-o-Meter
+            </h2>
+            <p className="text-xs text-zinc-500 mb-3">Shows mit der größten Uneinigkeit</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+              {stats.controversialShows.map(s => {
+                const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+                return (
+                  <div key={s.id} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {showTypeBadge(s.type, 'h-3.5', s.title)}
+                        <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
+                        <span className="text-xs text-zinc-500">{dateStr}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">{s.min.toFixed(1)}–{s.max.toFixed(1)}</span>
+                    <span className="font-heading text-lg font-bold text-amber-400 w-12 text-right tabular-nums">Δ{s.spread.toFixed(1)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
