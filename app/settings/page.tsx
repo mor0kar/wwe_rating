@@ -207,6 +207,30 @@ export default function SettingsPage() {
           <p className="text-xs text-red-400 mt-2">{addError}</p>
         )}
       </div>
+
+      {/* Daten-Export / Backup */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mt-4">
+        <p className="text-xs text-zinc-500 mb-2">Daten exportieren</p>
+        <p className="text-xs text-zinc-600 mb-3">
+          Sicherung aller Shows und Bewertungen — CSV für Excel, JSON als vollständiges Backup.
+        </p>
+        <div className="flex gap-2">
+          <a
+            href="/api/export"
+            download
+            className="flex-1 text-center text-sm border border-zinc-700 text-zinc-200 rounded-xl py-2 hover:border-zinc-500 transition-colors"
+          >
+            CSV
+          </a>
+          <a
+            href="/api/export?format=json"
+            download
+            className="flex-1 text-center text-sm border border-zinc-700 text-zinc-200 rounded-xl py-2 hover:border-zinc-500 transition-colors"
+          >
+            JSON
+          </a>
+        </div>
+      </div>
       </div>
     </div>
   )
