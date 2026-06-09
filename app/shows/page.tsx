@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getShowLogo, BADGE, BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS } from '@/lib/showStyle'
+import { BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS } from '@/lib/showStyle'
+import ShowLogo from '@/app/components/ShowLogo'
+import PersonRatingRow from '@/app/components/PersonRatingRow'
 import { fmt, scoreColor, avgScore } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
@@ -137,84 +139,26 @@ function EditCard({
       <div>
         <label className="text-xs text-zinc-500 mb-2 block">Bewertungen</label>
         <div className="space-y-4">
-          {Object.keys(baseRatings).map(p => {
-            const base = baseRatings[p] ?? 0
-            const bonus = danhausen[p] ? (bonuses[p] ?? 0) : 0
-            const total = base + bonus
-            return (
-              <div key={p} className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-zinc-100">{p}</span>
-                  <span className={`text-base font-semibold ${
-                    danhausen[p] ? 'text-purple-400 font-bold' : scoreColor(total)
-                  }`}>
-                    {danhausen[p] ? `⚡${fmt(total)}` : fmt(total)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={Math.min(base, 10)}
-                    onChange={e => setBaseRatings(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
-                    className="flex-1 accent-zinc-100"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={Math.min(base, 10)}
-                    onChange={e => {
-                      const v = parseFloat(e.target.value)
-                      if (!isNaN(v)) setBaseRatings(r => ({ ...r, [p]: Math.min(10, Math.max(0, v)) }))
-                    }}
-                    className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-50 outline-none focus:border-zinc-500 text-center"
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-zinc-600 mt-0.5">
-                  <span>0</span><span>5</span><span>10</span>
-                </div>
-
-                {/* DANHAUSEN-Toggle */}
-                <label className="flex items-center gap-2 cursor-pointer mt-1">
-                  <input
-                    type="checkbox"
-                    checked={danhausen[p] ?? false}
-                    onChange={e => setDanhausen(d => ({ ...d, [p]: e.target.checked }))}
-                    className="accent-purple-400 w-4 h-4"
-                  />
-                  <span className="text-xs text-zinc-400">⚡ DANHAUSEN-Moment</span>
-                </label>
-
-                {danhausen[p] && (
-                  <div className="space-y-1.5 pl-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-500">Bonus:</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={5}
-                        step={0.1}
-                        value={bonuses[p] ?? 0}
-                        onChange={e => setBonuses(b => ({ ...b, [p]: parseFloat(e.target.value) || 0 }))}
-                        className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 text-center"
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      value={notes[p] ?? ''}
-                      onChange={e => setNotes(n => ({ ...n, [p]: e.target.value }))}
-                      placeholder='Begründung (z.B. "Holy shit"-Moment)'
-                      className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 placeholder:text-zinc-600"
-                    />
-                  </div>
-                )}
-              </div>
-            )
-          })}
+          {Object.keys(baseRatings).map(p => (
+            <PersonRatingRow
+              key={p}
+              name={p}
+              showActiveToggle={false}
+              draft={{
+                active: true,
+                base: baseRatings[p] ?? 0,
+                danhausen: danhausen[p] ?? false,
+                bonus: bonuses[p] ?? 0,
+                note: notes[p] ?? '',
+              }}
+              onChange={patch => {
+                if ('base' in patch) setBaseRatings(r => ({ ...r, [p]: patch.base! }))
+                if ('danhausen' in patch) setDanhausen(d => ({ ...d, [p]: patch.danhausen! }))
+                if ('bonus' in patch) setBonuses(b => ({ ...b, [p]: patch.bonus! }))
+                if ('note' in patch) setNotes(n => ({ ...n, [p]: patch.note! }))
+              }}
+            />
+          ))}
         </div>
       </div>
 
@@ -306,13 +250,7 @@ function ShowCard({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1.5">
-              {getShowLogo(show.type, show.title) ? (
-                <img src={getShowLogo(show.type, show.title)!} alt={show.title || show.type} className="h-7 object-contain shrink-0" loading="lazy" />
-              ) : (
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                  {show.type}
-                </span>
-              )}
+              <ShowLogo type={show.type} title={show.title} heightClass="h-7" />
             </div>
             <span className="block font-heading text-base font-semibold text-zinc-50 truncate uppercase tracking-wide">
               {show.title || show.type}
@@ -340,7 +278,7 @@ function ShowCard({
             {!spoilerActive && (
               <button
                 onClick={e => { e.stopPropagation(); setMode('edit') }}
-                className="text-zinc-600 hover:text-zinc-300 p-1 transition-colors"
+                className="text-zinc-600 hover:text-zinc-300 p-2 -m-1 transition-colors"
                 aria-label="Show bearbeiten"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -420,7 +358,7 @@ function ShowCard({
         <div className="mt-3 pt-3 border-t border-zinc-800 flex justify-end">
           <button
             onClick={e => { e.stopPropagation(); setMode('confirmDelete') }}
-            className="text-xs text-red-400"
+            className="text-xs text-red-400 hover:text-red-300 px-3 py-2 -mr-2 -mb-1 transition-colors"
           >
             Löschen
           </button>
@@ -435,32 +373,22 @@ function ShowCard({
 export default function ShowsPage() {
   const router = useRouter()
   const { me } = useIdentity()
-  const [shows, setShows] = useState<Show[]>([])
   const [filter, setFilter] = useState('Alle')
   const [loading, setLoading] = useState(true)
 
-  // Alle bereits angelegten Shows (filterunabhängig) — für den
-  // "Noch zu bewerten"-Überblick und die persönliche "Für dich offen"-Liste.
+  // Alle angelegten Shows einmal laden; nach Typ wird clientseitig gefiltert
+  // (kein erneuter Request pro Filter-Chip). Quelle auch für "Noch zu bewerten"
+  // und die persönliche "Für dich offen"-Liste.
   const [allShows, setAllShows] = useState<Show[]>([])
 
-  function loadShows(f: string) {
-    setLoading(true)
-    const type = f === 'Alle' ? 'all' : f
-    fetch(`/api/shows?type=${type}`)
-      .then(r => r.json())
-      .then((data: Show[]) => { setShows(data); setLoading(false) })
-  }
-
-  useEffect(() => { loadShows(filter) }, [filter])
-
-  // Alle Shows einmalig laden, um offene Events und persönlich offene Shows zu ermitteln
   useEffect(() => {
     fetch('/api/shows?type=all')
       .then(r => r.json())
-      .then((data: Show[]) => setAllShows(data))
-      .catch(() => {})
+      .then((data: Show[]) => { setAllShows(data); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
+  const shows = filter === 'Alle' ? allShows : allShows.filter(s => s.type === filter)
   const existingKeys = new Set(allShows.map(s => `${s.type}|${s.date}`))
 
   // Gelaufene Kalender-Events ohne angelegte Show → "noch zu bewerten"
@@ -479,11 +407,11 @@ export default function ShowsPage() {
   }
 
   function handleUpdated(updated: Show) {
-    setShows(prev => prev.map(s => s.id === updated.id ? updated : s))
+    setAllShows(prev => prev.map(s => s.id === updated.id ? updated : s))
   }
 
   function handleDeleted(id: number) {
-    setShows(prev => prev.filter(s => s.id !== id))
+    setAllShows(prev => prev.filter(s => s.id !== id))
   }
 
   return (
@@ -501,7 +429,7 @@ export default function ShowsPage() {
             <p className="text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">Show-Bewertungen</p>
             <h1 className="font-heading text-5xl lg:text-6xl font-bold uppercase tracking-tight text-white drop-shadow-lg leading-[0.95]">Squared Circle Ratings</h1>
           </div>
-          <p className="text-zinc-500 text-sm shrink-0">{shows.length} Shows bewertet</p>
+          <p className="text-zinc-500 text-sm shrink-0">{allShows.length} Shows bewertet</p>
         </div>
       </div>
 
@@ -511,7 +439,7 @@ export default function ShowsPage() {
       {/* Für dich noch offen — angelegte Shows, die ich selbst nicht bewertet habe */}
       {myName && myPending.length > 0 && (
         <div className="max-w-6xl mx-auto px-4 mb-6">
-          <div className="bg-zinc-900 border border-amber-900/50 rounded-2xl p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">Für dich noch offen</h2>
@@ -519,18 +447,11 @@ export default function ShowsPage() {
             </div>
             <div className="space-y-2.5">
               {myPending.map(s => {
-                const logo = getShowLogo(s.type, s.title)
                 const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
                 return (
                   <div key={s.id} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      {logo ? (
-                        <img src={logo} alt={s.title || s.type} className="h-4 object-contain shrink-0" loading="lazy" />
-                      ) : (
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE[s.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                          {s.type}
-                        </span>
-                      )}
+                      <ShowLogo type={s.type} title={s.title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
                       <span className="text-sm text-zinc-200 truncate">{s.title || s.type}</span>
                       <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
                     </div>
@@ -559,18 +480,11 @@ export default function ShowsPage() {
             </div>
             <div className="space-y-2.5">
               {pending.map((ev, i) => {
-                const logo = getShowLogo(ev.type, ev.title)
                 const dateStr = new Date(ev.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
                 return (
                   <div key={i} className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
-                      {logo ? (
-                        <img src={logo} alt={ev.title || ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
-                      ) : (
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE[ev.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                          {ev.type}
-                        </span>
-                      )}
+                      <ShowLogo type={ev.type} title={ev.title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
                       <span className="text-sm text-zinc-200 truncate">{ev.title || ev.type}</span>
                       <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
                     </div>
@@ -625,6 +539,18 @@ export default function ShowsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : shows.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
+            <p className="text-sm text-zinc-400">
+              {filter === 'Alle' ? 'Noch keine Shows angelegt.' : `Keine ${filter}-Shows bewertet.`}
+            </p>
+            <button
+              onClick={() => router.push('/shows/add')}
+              className="mt-3 text-xs font-bold uppercase tracking-wide bg-[#DC0000] hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Show eintragen
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">

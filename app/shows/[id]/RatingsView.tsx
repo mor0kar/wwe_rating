@@ -86,9 +86,9 @@ export default function RatingsView({ ratings }: { ratings: RatingRow[] }) {
           </p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-          <p className="text-xs text-zinc-500 mb-1">Spread</p>
+          <p className="text-xs text-zinc-500 mb-1">Spanne</p>
           <p className="text-2xl font-semibold text-zinc-50">
-            {spread !== null ? `±${spread.toFixed(1)}` : '—'}
+            {spread !== null ? `Δ${spread.toFixed(1)}` : '—'}
           </p>
         </div>
       </div>

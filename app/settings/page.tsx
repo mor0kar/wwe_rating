@@ -150,7 +150,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setConfirmDelete(person)}
-                    className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                    className="text-xs text-red-400 hover:text-red-300 px-3 py-2 -mr-2 transition-colors"
                   >
                     Entfernen
                   </button>
