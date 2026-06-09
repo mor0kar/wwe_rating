@@ -434,13 +434,14 @@ function ShowCard({
 
 export default function ShowsPage() {
   const router = useRouter()
+  const { me } = useIdentity()
   const [shows, setShows] = useState<Show[]>([])
   const [filter, setFilter] = useState('Alle')
   const [loading, setLoading] = useState(true)
 
-  // Schlüssel (Typ|Datum) aller bereits angelegten Shows — filterunabhängig,
-  // damit der "Noch zu bewerten"-Überblick stimmt.
-  const [existingKeys, setExistingKeys] = useState<Set<string>>(new Set())
+  // Alle bereits angelegten Shows (filterunabhängig) — für den
+  // "Noch zu bewerten"-Überblick und die persönliche "Für dich offen"-Liste.
+  const [allShows, setAllShows] = useState<Show[]>([])
 
   function loadShows(f: string) {
     setLoading(true)
@@ -452,19 +453,25 @@ export default function ShowsPage() {
 
   useEffect(() => { loadShows(filter) }, [filter])
 
-  // Alle Shows einmalig laden, um offene (gelaufene, nicht angelegte) Events zu ermitteln
+  // Alle Shows einmalig laden, um offene Events und persönlich offene Shows zu ermitteln
   useEffect(() => {
     fetch('/api/shows?type=all')
       .then(r => r.json())
-      .then((data: Show[]) => setExistingKeys(new Set(data.map(s => `${s.type}|${s.date}`))))
+      .then((data: Show[]) => setAllShows(data))
       .catch(() => {})
   }, [])
+
+  const existingKeys = new Set(allShows.map(s => `${s.type}|${s.date}`))
 
   // Gelaufene Kalender-Events ohne angelegte Show → "noch zu bewerten"
   const now = Date.now()
   const pending = getUpcomingEvents().filter(
     ev => eventInstant(ev).getTime() < now && !existingKeys.has(`${ev.type}|${ev.date}`)
   )
+
+  // Angelegte Shows, die ich (laut Identität) selbst noch nicht bewertet habe
+  const myName = me
+  const myPending = myName ? allShows.filter(s => !(myName in s.ratings)) : []
 
   function rateEvent(ev: CalendarEvent) {
     const params = new URLSearchParams({ type: ev.type, date: ev.date, title: ev.title ?? '' })
@@ -500,6 +507,46 @@ export default function ShowsPage() {
 
       {/* Erinnerung, den Kalender zu aktualisieren (wenn er zur Neige geht) */}
       <CalendarReminder />
+
+      {/* Für dich noch offen — angelegte Shows, die ich selbst nicht bewertet habe */}
+      {myName && myPending.length > 0 && (
+        <div className="max-w-6xl mx-auto px-4 mb-6">
+          <div className="bg-zinc-900 border border-amber-900/50 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">Für dich noch offen</h2>
+              <span className="text-xs text-zinc-500">({myPending.length})</span>
+            </div>
+            <div className="space-y-2.5">
+              {myPending.map(s => {
+                const logo = getShowLogo(s.type, s.title)
+                const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+                return (
+                  <div key={s.id} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {logo ? (
+                        <img src={logo} alt={s.title || s.type} className="h-4 object-contain shrink-0" loading="lazy" />
+                      ) : (
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md shrink-0 ${BADGE[s.type] || 'bg-zinc-800 text-zinc-300'}`}>
+                          {s.type}
+                        </span>
+                      )}
+                      <span className="text-sm text-zinc-200 truncate">{s.title || s.type}</span>
+                      <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/shows/${s.id}`)}
+                      className="shrink-0 text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wide transition-colors"
+                    >
+                      Bewerten
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Noch zu bewerten — gelaufene Events ohne angelegte Show */}
       {pending.length > 0 && (
