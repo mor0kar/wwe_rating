@@ -14,9 +14,10 @@ export const SHOW_FILTERS = ['Alle', ...SHOW_TYPES] as const
 // Alle Logos werden direkt von Wikimedia/Wikipedia bzw. wwe.com geladen.
 
 const WEEKLY_LOGOS: Record<string, string> = {
-  RAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/WWE_RAW_Logo_2025.svg/3840px-WWE_RAW_Logo_2025.svg.png',
-  SmackDown: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/WWE_SmackDown_%282024%29_Logo.svg/960px-WWE_SmackDown_%282024%29_Logo.svg.png',
-  NXT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/WWE_NXT_2024_Logo.svg/3840px-WWE_NXT_2024_Logo.svg.png',
+  // Wikimedia-Thumbnails bewusst klein angefordert — gerendert wird auf ~28–44px Höhe,
+  // 480px reicht auch für Retina und spart ggü. den Originalen (3840px) massiv Bytes.
+  RAW: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/WWE_RAW_Logo_2025.svg/480px-WWE_RAW_Logo_2025.svg.png',
+  SmackDown: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/WWE_SmackDown_%282024%29_Logo.svg/480px-WWE_SmackDown_%282024%29_Logo.svg.png',
   SNM: 'https://www.wwe.com/f/styles/wwe_large/public/all/2024/12/SNME-presale-reg-logo--5b3c37e662fa172d6cc9b7c74d699987--fa61ee9da3b54c8c4a052c2799aa0f87.png',
 }
 
@@ -32,10 +33,9 @@ const PLE_LOGOS: { match: string[]; url: string }[] = [
   { match: ['night of champions'], url: 'https://en.wikipedia.org/wiki/Special:FilePath/WWE%20Night%20of%20Champions%202023%20logo.png?width=400' },
 ]
 
-// Generisches PLE-Bild als Fallback (statt Text-Badge), wenn kein spezifisches Logo passt.
-// Überall die transparente "PREMIUM LIVE EVENT"-Wortmarke.
-const PLE_EMBLEM = '/icons/ple-generic-wordmark-nobg.png'
-const PLE_WORDMARK = '/icons/ple-generic-wordmark-nobg.png'
+// Generisches PLE-Bild als Fallback (statt Text-Badge), wenn kein spezifisches Logo passt:
+// die transparente "PREMIUM LIVE EVENT"-Wortmarke.
+const PLE_PLACEHOLDER = '/icons/ple-generic-wordmark-nobg.png'
 
 // Liefert die Logo-URL für eine Show. Unbekannte PLEs bekommen ein generisches
 // PLE-Bild (plePlaceholder: 'emblem' = kompakt, 'wordmark' = groß, 'none' = Badge).
@@ -50,7 +50,7 @@ export function getShowLogo(
       if (ple.match.some(m => t.includes(m))) return ple.url
     }
     if (plePlaceholder === 'none') return null
-    return plePlaceholder === 'wordmark' ? PLE_WORDMARK : PLE_EMBLEM
+    return PLE_PLACEHOLDER
   }
   return WEEKLY_LOGOS[type] ?? null
 }
@@ -63,7 +63,6 @@ export const BADGE: Record<string, string> = {
   SmackDown: 'bg-blue-950 text-blue-400',
   PLE: 'bg-purple-950 text-purple-400',
   SNM: 'bg-amber-950 text-amber-400',
-  NXT: 'bg-green-950 text-green-400',
 }
 
 // Linke Akzent-Border pro Typ
@@ -72,7 +71,6 @@ export const BORDER_ACCENT: Record<string, string> = {
   SmackDown: 'border-l-blue-600',
   PLE: 'border-l-purple-600',
   SNM: 'border-l-amber-500',
-  NXT: 'border-l-green-600',
 }
 
 // Dezenter typ-getönter Verlauf (Scorecard-Look) — siehe globals.css

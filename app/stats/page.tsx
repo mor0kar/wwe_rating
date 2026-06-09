@@ -1,5 +1,6 @@
 import sql from '@/lib/db'
-import { getShowLogo, BADGE, SHOW_TYPES } from '@/lib/showStyle'
+import { SHOW_TYPES } from '@/lib/showStyle'
+import ShowLogo from '@/app/components/ShowLogo'
 import { scoreColor, avgScore, scoreLabel } from '@/lib/score'
 import ScoreTimeline from './ScoreTimeline'
 
@@ -117,15 +118,7 @@ async function getStats() {
 }
 
 function showTypeBadge(type: string, className = 'h-4', title?: string) {
-  const logo = getShowLogo(type, title)
-  if (logo) {
-    return <img src={logo} alt={title || type} className={`${className} object-contain shrink-0`} loading="lazy" />
-  }
-  return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-md shrink-0 ${BADGE[type] || 'bg-zinc-800 text-zinc-300'}`}>
-      {type}
-    </span>
-  )
+  return <ShowLogo type={type} title={title} heightClass={className} badgeClass="text-xs font-medium px-2 py-0.5" />
 }
 
 // Typ-Farbe für Progress-Bars
@@ -134,7 +127,6 @@ const TYPE_BAR: Record<string, string> = {
   SmackDown: 'bg-blue-500',
   PLE: 'bg-purple-500',
   SNM: 'bg-amber-500',
-  NXT: 'bg-green-500',
 }
 
 function barColor(avg: number) {

@@ -9,7 +9,8 @@ import {
   missingShowWeeks,
   type CalendarEvent,
 } from '@/lib/calendar'
-import { getShowLogo, BADGE, BORDER_ACCENT } from '@/lib/showStyle'
+import { BORDER_ACCENT } from '@/lib/showStyle'
+import ShowLogo from '@/app/components/ShowLogo'
 
 const MONTH_NAMES: Record<number, string> = {
   1: 'Januar', 2: 'Februar', 3: 'März', 4: 'April',
@@ -112,13 +113,7 @@ export default function UpcomingPage() {
           {/* Show-Info */}
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              {getShowLogo(ev.type, ev.title) ? (
-                <img src={getShowLogo(ev.type, ev.title)!} alt={ev.title || ev.type} className="h-4 object-contain shrink-0" loading="lazy" />
-              ) : (
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${BADGE[ev.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                  {ev.type}
-                </span>
-              )}
+              <ShowLogo type={ev.type} title={ev.title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
               {ev.title && ev.title !== ev.type && (
                 <span className="text-sm font-semibold text-zinc-100 truncate">{ev.title}</span>
               )}

@@ -4,7 +4,8 @@ import sql from '@/lib/db'
 import RatingEditor from './RatingEditor'
 import RatingsView from './RatingsView'
 import HeaderScore from './HeaderScore'
-import { getShowLogo, BADGE, BORDER_ACCENT, TINT } from '@/lib/showStyle'
+import { BORDER_ACCENT, TINT } from '@/lib/showStyle'
+import ShowLogo from '@/app/components/ShowLogo'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,13 +54,9 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         <div className={`absolute inset-0 pointer-events-none ${TINT[show.type] || ''}`} />
         <div className="relative flex items-center justify-between gap-4">
           <div className="min-w-0">
-            {getShowLogo(show.type, show.title, 'wordmark') ? (
-              <img src={getShowLogo(show.type, show.title, 'wordmark')!} alt={show.title || show.type} className="h-11 object-contain mb-3" />
-            ) : (
-              <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-md mb-3 ${BADGE[show.type] || 'bg-zinc-800 text-zinc-300'}`}>
-                {show.type}
-              </span>
-            )}
+            <div className="mb-3">
+              <ShowLogo type={show.type} title={show.title} placeholder="wordmark" heightClass="h-11" badgeClass="inline-block text-xs font-medium px-2 py-0.5" />
+            </div>
             <h1 className="font-heading text-2xl font-bold uppercase tracking-wide text-zinc-50 leading-tight">
               {show.title || show.type}
             </h1>
