@@ -90,28 +90,41 @@ export default function ScoreTimeline({
           />
         )}
 
-        {/* Klick-/Hover-Punkte */}
+        {/* Sichtbare Punkte (rein visuell — Interaktion läuft über die Slices darüber) */}
         {data.map((d, i) => (
-          <g
-            key={i}
-            className="cursor-pointer"
-            onMouseEnter={() => setHover(i)}
-            onMouseLeave={() => setHover(h => (h === i ? null : h))}
-            onClick={() => router.push(`/shows/${d.id}`)}
-          >
-            {/* unsichtbare, große Trefferfläche */}
-            <circle cx={xAt(i)} cy={yAt(d.avg)} r={12} fill="transparent" />
-            <circle
-              cx={xAt(i)}
-              cy={yAt(d.avg)}
-              r={hover === i ? 5 : 2.5}
-              fill={scoreHex(d.avg)}
-              stroke={hover === i ? '#fafafa' : 'none'}
-              strokeWidth={hover === i ? 1.5 : 0}
-              className="transition-all"
-            />
-          </g>
+          <circle
+            key={`dot-${i}`}
+            cx={xAt(i)}
+            cy={yAt(d.avg)}
+            r={hover === i ? 5 : 2.5}
+            fill={scoreHex(d.avg)}
+            stroke={hover === i ? '#fafafa' : 'none'}
+            strokeWidth={hover === i ? 1.5 : 0}
+            className="transition-all pointer-events-none"
+          />
         ))}
+
+        {/* Interaktions-Slices: volle Höhe je Punkt → große Tap-Fläche; Klick öffnet die Show */}
+        {data.map((d, i) => {
+          const left = i === 0 ? padL : (xAt(i - 1) + xAt(i)) / 2
+          const right = i === lastIdx ? W - padR : (xAt(i) + xAt(i + 1)) / 2
+          return (
+            <rect
+              key={`hit-${i}`}
+              x={left}
+              y={padT}
+              width={Math.max(0, right - left)}
+              height={innerH}
+              fill="transparent"
+              className="cursor-pointer"
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(h => (h === i ? null : h))}
+              onClick={() => router.push(`/shows/${d.id}`)}
+            >
+              <title>{`${d.title || d.type} öffnen`}</title>
+            </rect>
+          )
+        })}
 
         {/* X-Beschriftung (Datum) */}
         {xIdx.map(i => (
@@ -127,6 +140,10 @@ export default function ScoreTimeline({
           </text>
         ))}
       </svg>
+
+      <p className="mt-2 text-center text-[11px] text-zinc-600">
+        Tipp: Auf einen Punkt tippen öffnet die Show
+      </p>
 
       {/* Tooltip */}
       {active && hover != null && (

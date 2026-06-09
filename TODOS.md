@@ -322,6 +322,15 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-033] Score-Verlauf: Punkte zuverlässig antippbar
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Klick auf einen Verlaufs-Punkt führte schon zur Show — war aber schwer zu treffen (kleine, dichte Punkte) und nicht auffindbar
+- **Akzeptanzkriterium:** Volle-Höhe-Trefferfläche je Punkt (Klick irgendwo in der Spalte → richtige Show) + sichtbarer Hinweis; Hover/Tooltip unverändert
+- **Evidenz:** Juni 2026. `app/stats/ScoreTimeline.tsx`: sichtbare Punkte rein visuell (`pointer-events-none`), Interaktion über volle-Höhe-`<rect>`-Slices mit `<title>`; Caption „Auf einen Punkt tippen öffnet die Show". Smoke: /stats 200, 53 Slices. `npm run build` grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
