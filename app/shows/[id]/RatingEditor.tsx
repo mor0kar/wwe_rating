@@ -1,8 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, scoreColor } from '@/lib/score'
 import { useIdentity } from '@/lib/identity'
+import PersonRatingRow from '@/app/components/PersonRatingRow'
 
 type Existing = Record<string, { score: number; note: string | null }>
 
@@ -135,107 +135,27 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
           </div>
         )}
 
-        {editablePersons.map(p => {
-          const isOn = active[p] ?? false
-          const b = base[p] ?? 0
-          const bo = danhausen[p] ? (bonus[p] ?? 0) : 0
-          const total = b + bo
-          return (
-            <div
-              key={p}
-              className={`rounded-xl border border-zinc-800 p-3 transition-opacity ${isOn ? '' : 'opacity-40'}`}
-            >
-              {/* Person + Dabei-Toggle */}
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-zinc-100">{p}</span>
-                <div className="flex items-center gap-3">
-                  {isOn && (
-                    <span className={`text-base font-semibold ${
-                      danhausen[p] ? 'text-purple-400 font-bold' : scoreColor(total)
-                    }`}>
-                      {danhausen[p] ? `⚡${fmt(total)}` : fmt(total)}
-                    </span>
-                  )}
-                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                    <span className="text-xs text-zinc-500">dabei</span>
-                    <input
-                      type="checkbox"
-                      checked={isOn}
-                      onChange={e => setActive(a => ({ ...a, [p]: e.target.checked }))}
-                      className="accent-red-600 w-4 h-4"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {isOn && (
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={0}
-                      max={10}
-                      step={0.1}
-                      value={Math.min(b, 10)}
-                      onChange={e => setBase(r => ({ ...r, [p]: parseFloat(e.target.value) }))}
-                      className="flex-1 accent-zinc-100"
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      max={10}
-                      step={0.1}
-                      value={Math.min(b, 10)}
-                      onChange={e => {
-                        const v = parseFloat(e.target.value)
-                        if (!isNaN(v)) setBase(r => ({ ...r, [p]: Math.min(10, Math.max(0, v)) }))
-                      }}
-                      className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-50 outline-none focus:border-zinc-500 text-center"
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-zinc-600">
-                    <span>0</span><span>5</span><span>10</span>
-                  </div>
-
-                  {/* DANHAUSEN-Toggle */}
-                  <label className="flex items-center gap-2 cursor-pointer mt-1">
-                    <input
-                      type="checkbox"
-                      checked={danhausen[p] ?? false}
-                      onChange={e => setDanhausen(d => ({ ...d, [p]: e.target.checked }))}
-                      className="accent-purple-400 w-4 h-4"
-                    />
-                    <span className="text-xs text-zinc-500">⚡ DANHAUSEN-Moment</span>
-                  </label>
-
-                  {danhausen[p] && (
-                    <div className="space-y-1.5 pl-6 pt-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500">Bonus:</span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={5}
-                          step={0.1}
-                          value={bonus[p] ?? 0}
-                          onChange={e => setBonus(bn => ({ ...bn, [p]: parseFloat(e.target.value) || 0 }))}
-                          className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 text-center"
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={notes[p] ?? ''}
-                        onChange={e => setNotes(n => ({ ...n, [p]: e.target.value }))}
-                        placeholder='Begründung (z.B. "Holy shit"-Moment)'
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none focus:border-purple-500 placeholder:text-zinc-600"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
+        {editablePersons.map(p => (
+          <PersonRatingRow
+            key={p}
+            name={p}
+            className="rounded-xl border border-zinc-800 p-3"
+            draft={{
+              active: active[p] ?? false,
+              base: base[p] ?? 0,
+              danhausen: danhausen[p] ?? false,
+              bonus: bonus[p] ?? 0,
+              note: notes[p] ?? '',
+            }}
+            onChange={patch => {
+              if ('active' in patch) setActive(a => ({ ...a, [p]: patch.active! }))
+              if ('base' in patch) setBase(r => ({ ...r, [p]: patch.base! }))
+              if ('danhausen' in patch) setDanhausen(d => ({ ...d, [p]: patch.danhausen! }))
+              if ('bonus' in patch) setBonus(bn => ({ ...bn, [p]: patch.bonus! }))
+              if ('note' in patch) setNotes(n => ({ ...n, [p]: patch.note! }))
+            }}
+          />
+        ))}
 
         {/* Aktionen */}
         <div className="flex gap-2 pt-1">
