@@ -295,6 +295,33 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-030] Logos zentralisiert & verschlankt (`<ShowLogo>`)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Show-Logos überall via einer Komponente — kleinere Quell-Thumbnails, fixe Höhe, Fallback auf Text-Badge
+- **Akzeptanzkriterium:** `<ShowLogo>` ersetzt die Inline-img/Badge-Blöcke; Wikimedia-Thumbnails statt 3840px; `onError` → Badge
+- **Evidenz:** Juni 2026. `app/components/ShowLogo.tsx`; Adoption in /shows, /upcoming, /stats, Detail. `lib/showStyle.ts`: RAW/SmackDown auf 480px, NXT-Logo/-Badge/-Border entfernt, PLE-Placeholder zusammengeführt. Smoke-Test: /stats rendert 480px-Logos, keine 3840px. `npm run build` grün.
+
+---
+
+### [WWE-031] Rating-Editor vereinheitlicht (`<PersonRatingRow>`)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Add-, Inline-Edit- und Detail-Editor teilten dupliziertes Slider-/DANHAUSEN-UI mit inkonsistentem Step
+- **Akzeptanzkriterium:** Eine `<PersonRatingRow>` für alle drei; Slider-Step überall 0.1; Score-Farbe via `scoreColor()`
+- **Evidenz:** Juni 2026. `app/components/PersonRatingRow.tsx`; Eltern (Add/EditCard/RatingEditor) halten State, Zeile meldet Patches. Behebt Step 0.5→0.1 im Inline-Edit + duplizierte Farb-Logik in Add. `npm run build` grün.
+
+---
+
+### [WWE-032] UI/UX-Feinschliff
+- **Status:** 🟢 Erledigt
+- **Priorität:** Niedrig
+- **Beschreibung:** Sammel-Ticket aus dem UI-Review — Touch-Targets, Empty-State, Daten-Fetch, Banner, Label-Konsistenz, Dead-Code
+- **Akzeptanzkriterium:** Tap-Flächen ≥44px (Edit/Löschen/Entfernen); Empty-State auf /shows; Typ-Filter clientseitig (kein Fetch pro Chip); „Für dich offen"-Banner entzerrt; „Spread ±" → „Spanne Δ"; NXT-CSS-Var + Doppel-Fetch raus
+- **Evidenz:** Juni 2026. `app/shows/page.tsx` (Client-Filter aus `allShows`, Empty-State, größere Tap-Flächen, neutraler Banner), `app/settings/page.tsx`, `app/shows/[id]/RatingsView.tsx`, `app/globals.css`. `npm run build` + `npm test` (18) grün, Live-Smoke 5 Seiten 200.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
