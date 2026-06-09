@@ -4,8 +4,29 @@ import {
   zonedInstant,
   eventInstant,
   germanWatchTime,
+  isValidTz,
   type CalendarEvent,
 } from './calendar'
+
+describe('isValidTz', () => {
+  it('akzeptiert gültige IANA-Zeitzonen', () => {
+    expect(isValidTz('Europe/Berlin')).toBe(true)
+    expect(isValidTz('America/New_York')).toBe(true)
+  })
+  it('lehnt ungültige/leere Zeitzonen ab', () => {
+    expect(isValidTz('')).toBe(false)
+    expect(isValidTz('Quatsch/Unsinn')).toBe(false)
+    expect(isValidTz('GMT+2')).toBe(false)
+  })
+})
+
+describe('germanWatchTime crasht nicht bei ungültiger tz (Fallback Berlin)', () => {
+  it('liefert ein Ergebnis statt zu werfen', () => {
+    const ev: CalendarEvent = { date: '2026-06-08', type: 'RAW', city: 'X', tz: 'kaputt' }
+    expect(() => germanWatchTime(ev)).not.toThrow()
+    expect(germanWatchTime(ev).time).toMatch(/^\d{2}:\d{2}$/)
+  })
+})
 
 describe('localStartTime (+30-Min-Offset auf Listenzeit)', () => {
   const base: CalendarEvent = { date: '2026-06-08', type: 'RAW', city: 'X', tz: 'Europe/Berlin' }

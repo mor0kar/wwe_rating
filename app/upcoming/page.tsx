@@ -7,6 +7,7 @@ import {
   localStartTime,
   airsOnLabel,
   missingShowWeeks,
+  isValidTz,
   type CalendarEvent,
 } from '@/lib/calendar'
 import { BORDER_ACCENT, SHOW_TYPES } from '@/lib/showStyle'
@@ -86,13 +87,17 @@ function CustomEventForm({ onDone }: { onDone: () => void }) {
 
   function handleSave() {
     if (!city.trim()) { setError('Stadt ist Pflicht.'); return }
+    if (!isValidTz(tz.trim())) {
+      setError('Ungültige Zeitzone. Beispiel: Europe/Berlin oder America/New_York.')
+      return
+    }
     addCustomEvent({
       date,
       type,
       title: title.trim() || undefined,
       venue: venue.trim() || undefined,
       city: city.trim(),
-      tz,
+      tz: tz.trim(),
       localTime,
     })
     onDone()

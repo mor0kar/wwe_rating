@@ -180,9 +180,23 @@ export function calendarStatus(now: Date = new Date()): {
 // --- Zeit-Helfer -------------------------------------------------------
 
 // Offset (in ms) einer Zeitzone zum gegebenen Instant: (Zeit in tz) − UTC.
+// Prüft, ob eine IANA-Zeitzone gültig ist (Intl wirft sonst RangeError).
+export function isValidTz(tz: string): boolean {
+  if (!tz) return false
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
 function tzOffsetMs(instant: Date, tz: string): number {
+  // Defensive: ungültige/leere Zeitzone (z.B. aus einem fehlerhaften Custom-Event)
+  // darf nicht die ganze Kalenderseite crashen lassen → Fallback auf Berlin.
+  const safeTz = isValidTz(tz) ? tz : 'Europe/Berlin'
   const dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz, hour12: false,
+    timeZone: safeTz, hour12: false,
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   })
