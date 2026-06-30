@@ -25,6 +25,8 @@ Jeder Agent liest vor produktiver Arbeit in dieser Reihenfolge:
 4. `.claude/agent-memory/<agent>/memory.md` (rollenspezifisches Gedächtnis — etablierte Patterns)
 5. Relevante Dateien im aktuellen Scope
 
+Bei **UI-/Design-Arbeit zusätzlich**: die Skill `.claude/skills/ui-ux-pro-max/` konsultieren (siehe Abschnitt „Design-Intelligenz" unten).
+
 ---
 
 ## Nicht verhandelbare Projektregeln
@@ -48,6 +50,18 @@ Jeder Agent liest vor produktiver Arbeit in dieser Reihenfolge:
 - Bestehende Patterns bevorzugen (Tailwind v4, App Router, Server Components wo möglich)
 - Keine unnötige Komplexität — die App soll simpel bleiben
 - Mobile-first: UI muss auf dem Handy gut funktionieren
+
+---
+
+## Design-Intelligenz (UI/UX Pro Max Skill)
+
+Für jede Aufgabe, die **ändert, wie etwas aussieht, sich anfühlt, bewegt oder bedient wird**, ist die Skill `.claude/skills/ui-ux-pro-max/` Pflicht-Referenz. Sie liefert Pattern-, Style-, Farb-, Typo-, UX- und Stack-Empfehlungen mit Begründung.
+
+- **Wann:** neue Seiten/Komponenten, Style/Farbe/Font/Layout/Animation wählen, UI auf UX & Accessibility reviewen.
+- **Wann nicht:** reines Backend, API/DB, Auth, Infra (→ Skill überspringen).
+- **Aufruf** (Windows: `python`): `python .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system -f markdown`, danach `--domain <style|color|typography|ux|chart>` bzw. `--stack nextjs` für Details.
+- **Projekt-Constraint schlägt Skill:** Dark-Mode (zinc), mobile-first, Tailwind v4, Show-Typen ohne NXT. Skill-Output wird an den bestehenden Stil (`globals.css`, `lib/showStyle.ts`) angepasst, nie blind übernommen.
+- Vollständige Anleitung + weitere mitgelieferte Skills (`design`, `design-system`, `ui-styling`, `brand`, `banner-design`, `slides`): siehe `CLAUDE.md` → „Design-Intelligenz" und `.agents/skills/README.md`.
 
 ---
 
@@ -101,6 +115,7 @@ Verantwortlich für:
 - Mobile-first Layout, Tailwind v4 Styling
 - Interaktivität (Client Components mit `'use client'`)
 - Score-Visualisierung, Filter, Animationen
+- Konsultiert die `ui-ux-pro-max`-Skill vor visuellen Entscheidungen (Pflicht bei neuen Seiten/Komponenten/Styles)
 
 ### backend-specialist
 Verantwortlich für:

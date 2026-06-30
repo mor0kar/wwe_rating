@@ -19,6 +19,7 @@ Setze genau eine Aufgabe aus `TODOS.md` um.
 2. Lies den konkreten Task in `TODOS.md`
 3. Lies dein Memory: `.claude/agent-memory/implementer/MEMORY.md` (Index) + verlinkte Files
 4. Lies die betroffenen Dateien
+5. Bei UI-/Design-Tasks: `ui-ux-pro-max`-Skill konsultieren (AGENTS.md → Design-Intelligenz)
 
 ## Workflow
 

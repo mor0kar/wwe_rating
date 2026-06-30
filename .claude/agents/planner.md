@@ -37,6 +37,7 @@ Für jede Teilaufgabe:
 - Maximal 6 Teilaufgaben pro Zerlegung
 - Jede Teilaufgabe muss in ≤ 30 Minuten umsetzbar sein
 - Immer beachten: kein Prisma/ORM, kein NextAuth, Tailwind v4, Supabase direkt (postgres.js), Show-Typen ohne NXT
+- Bei UI-/Design-Teilaufgaben einen Schritt „Design-System via `ui-ux-pro-max`-Skill ziehen" einplanen (siehe AGENTS.md → Design-Intelligenz)
 - Abhängigkeiten explizit benennen
 - Keine Phantom-Tasks ohne konkreten Nutzen
 

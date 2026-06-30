@@ -26,7 +26,7 @@ Du bist der Orchestrator für wwe-rater.
 ## Projekt-Routing
 
 - Planung komplexer Tasks → `planner`
-- UI / Seiten / Tailwind → `frontend-specialist`
+- UI / Seiten / Tailwind → `frontend-specialist` (nutzt die `ui-ux-pro-max`-Skill für Design-Entscheidungen)
 - API-Routen / DB / Auth → `backend-specialist`
 - Einzelne fokussierte Tasks → `implementer`
 - Session-Ende → `session-handoff`

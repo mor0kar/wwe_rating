@@ -81,11 +81,12 @@ wwe-rater/
 │   ├── schema.sql               ← DB-Schema (im Supabase SQL Editor ausführen)
 │   ├── seed.js                  ← Einmaliger Import der Excel-Shows
 │   └── migrations/              ← Nachträgliche Schema-Änderungen (siehe README)
-├── .agents/skills/              ← Projekt-Skills für Agents (aktuell nur Stub)
+├── .agents/skills/              ← Projekt-Skill-Konvention (Pointer → .claude/skills/)
 └── .claude/
-    └── agents/                  ← orchestrator, planner, implementer,
-                                    frontend-specialist, backend-specialist,
-                                    session-handoff, prompt-optimizer
+    ├── agents/                  ← orchestrator, planner, implementer,
+    │                              frontend-specialist, backend-specialist,
+    │                              session-handoff, prompt-optimizer
+    └── skills/                  ← UI/UX Pro Max Design-Skill (ui-ux-pro-max + 6 weitere)
 ```
 
 ---
@@ -116,6 +117,31 @@ Score-Farben:
 Fonts:
 - Headlines/Wordmark/Scores: **Oswald** (athletic/condensed) via `next/font/google`, geladen in `app/layout.tsx`, als CSS-Var `--font-oswald` → Theme-Token `--font-heading` (Utility `font-heading`). h1/h2/h3 nutzen sie automatisch (`@layer base` in `globals.css`).
 - Body/UI: System-Font-Stack.
+
+---
+
+## Design-Intelligenz — UI/UX Pro Max Skill
+
+Für **jede** visuelle/UI-Entscheidung (neue Seite, Komponente, Style, Farbe, Typo, Animation, Layout, Accessibility-Review) wird die Skill `ui-ux-pro-max` konsultiert. Sie liegt unter `.claude/skills/` (im Repo, also für Session **und** alle Agents verfügbar) und ist eine durchsuchbare Design-Datenbank (67 Styles, 161 Farbpaletten, 57 Font-Pairings, 99 UX-Regeln, Stack-Guides für Next.js/Tailwind/shadcn u.a.).
+
+**Wann nutzen:** neue Seiten/Komponenten bauen, Style/Farbe/Font wählen, UI auf UX/Accessibility reviewen, Dark-Mode/Animation/Layout-Fragen. **Wann nicht:** reines Backend, API/DB, Infra.
+
+**Aufruf** (Windows → `python`, nicht `python3`):
+
+```bash
+# 1. Design-System für ein Vorhaben (immer zuerst):
+python .claude/skills/ui-ux-pro-max/scripts/search.py "<produkt> <industrie> <keywords>" --design-system -f markdown
+
+# 2. Detail-Suche in einer Domäne (style|color|typography|ux|chart|landing|product):
+python .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain ux
+
+# 3. Stack-spezifische Best Practices:
+python .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack nextjs
+```
+
+**Projekt-Constraint hat Vorrang:** Die App ist **Dark-Mode (zinc-Palette)**, mobile-first, Tailwind v4. Skill-Empfehlungen, die dem widersprechen (z.B. Light-Background-Vorschläge), werden an den bestehenden Stil angepasst, nicht blind übernommen. Die Skill liefert Reasoning/Optionen — die finalen Tokens bleiben konsistent mit `globals.css` / `lib/showStyle.ts`.
+
+Weitere mitgelieferte Skills (`.claude/skills/`): `design`, `design-system`, `ui-styling`, `brand`, `banner-design`, `slides` — bei Bedarf nutzbar, Kern fürs Web-Redesign ist `ui-ux-pro-max`.
 
 ---
 

@@ -18,6 +18,7 @@ Die App wird primär auf dem Handy genutzt — jede Seite muss auf 390px Breite 
 1. Lies `AGENTS.md` + `CLAUDE.md` — Design System, Konventionen
 2. Lies den aktuellen Task in `TODOS.md`
 3. Lies dein Memory: `.claude/agent-memory/frontend-specialist/MEMORY.md` (Index) + verlinkte Files
+4. Konsultiere die Design-Skill (siehe „Design-Intelligenz" unten) für jede visuelle Entscheidung
 
 ## Projekt-Konventionen
 
@@ -29,6 +30,17 @@ Die App wird primär auf dem Handy genutzt — jede Seite muss auf 390px Breite 
 - Zentrale Helfer nutzen, nicht duplizieren: `lib/score.ts`, `lib/showStyle.ts`, `<ShowLogo>`, `<PersonRatingRow>`, `<ScoreRing>`
 - Score-Farben über `scoreColor()` (grün ≥7, amber 4–6, rot <4, lila >10 / DANHAUSEN)
 - Show-Typen nur RAW/SmackDown/PLE/SNM (aus `SHOW_TYPES`) — kein NXT
+
+## Design-Intelligenz (ui-ux-pro-max Skill)
+
+Pflicht-Referenz für visuelle Entscheidungen — liefert Pattern, Style, Farbe, Typo, UX-Regeln & Stack-Guides mit Begründung. Liegt unter `.claude/skills/ui-ux-pro-max/`.
+
+- **Vor neuen Seiten/Komponenten:** erst Design-System ziehen
+  `python .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system -f markdown`
+- **Detail-Fragen:** `--domain ux` (Accessibility/Animation), `--domain color`, `--domain typography`, `--domain chart`
+- **Stack:** `--stack nextjs` für Next.js/RSC-spezifische Best Practices
+- **Windows:** `python`, nicht `python3`.
+- **Constraint vor Skill:** Dark-Mode (zinc), mobile-first, Tailwind v4 schlagen jede gegenteilige Skill-Empfehlung. Die Skill liefert Optionen/Reasoning — finale Tokens bleiben konsistent mit `globals.css`/`lib/showStyle.ts`. Ein Light-Background-Vorschlag wird auf die zinc-Dark-Palette gemappt, nicht übernommen.
 
 ## Design-Prinzipien
 
