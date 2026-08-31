@@ -32,6 +32,8 @@ export const TZ_OPTIONS: { group: string; zones: { value: string; label: string 
     zones: [
       { value: 'Europe/Berlin', label: 'Deutschland (Berlin)' },
       { value: 'Europe/London', label: 'UK (London)' },
+      { value: 'Europe/Dublin', label: 'Irland (Dublin)' },
+      { value: 'Europe/Brussels', label: 'Belgien (Brüssel)' },
       { value: 'Europe/Paris', label: 'Frankreich (Paris)' },
       { value: 'Europe/Rome', label: 'Italien (Rom)' },
       { value: 'Europe/Madrid', label: 'Spanien (Madrid)' },
@@ -61,6 +63,7 @@ export const TZ_OPTIONS: { group: string; zones: { value: string; label: string 
     zones: [
       { value: 'Asia/Riyadh', label: 'Saudi-Arabien (Riad)' },
       { value: 'Asia/Tokyo', label: 'Japan (Tokio)' },
+      { value: 'Australia/Perth', label: 'Australien (Perth)' },
       { value: 'Australia/Sydney', label: 'Australien (Sydney)' },
     ],
   },
@@ -124,14 +127,47 @@ const EVENTS: CalendarEvent[] = [
   { date: '2026-08-24', type: 'RAW', venue: 'Canadian Tire Centre', city: 'Ottawa, Canada', tz: 'America/Toronto', localTime: '19:30' },
   { date: '2026-08-28', type: 'SmackDown', venue: 'Rocket Arena', city: 'Cleveland, OH', tz: 'America/New_York', localTime: '19:30' },
 
-  // September
+  // September — Herbst-Season (US + Mexiko-Abstecher)
   { date: '2026-09-06', type: 'SNM', title: "Sunday Night's Main Event", venue: 'State Farm Arena', city: 'Atlanta, GA', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-09-07', type: 'RAW', venue: 'Legacy Arena', city: 'Birmingham, AL', tz: 'America/Chicago', localTime: '18:30' },
-  { date: '2026-09-11', type: 'SmackDown', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '19:00' },
-  { date: '2026-09-14', type: 'RAW', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '19:00' },
+  // Mexiko-Doppel: SmackDown Fr, RAW Mo — beide Arena CDMX
+  { date: '2026-09-11', type: 'SmackDown', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '17:30' },
+  { date: '2026-09-14', type: 'RAW', venue: 'Arena CDMX', city: 'Mexico City, Mexico', tz: 'America/Mexico_City', localTime: '17:30' },
+  { date: '2026-09-18', type: 'SmackDown', venue: 'Hilliard Center', city: 'Corpus Christi, TX', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-09-21', type: 'RAW', venue: 'Frost Bank Center', city: 'San Antonio, TX', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-09-25', type: 'SmackDown', venue: 'Gainbridge Fieldhouse', city: 'Indianapolis, IN', tz: 'America/Indiana/Indianapolis', localTime: '19:30' },
+  { date: '2026-09-28', type: 'RAW', venue: 'Fiserv Forum', city: 'Milwaukee, WI', tz: 'America/Chicago', localTime: '18:30' },
 
   // Oktober
-  { date: '2026-10-10', type: 'PLE', title: 'Money in the Bank', venue: 'Smoothie King Center', city: 'New Orleans, LA', tz: 'America/Chicago', localTime: '19:00' },
+  { date: '2026-10-02', type: 'SmackDown', venue: 'Ball Arena', city: 'Denver, CO', tz: 'America/Denver', localTime: '17:30' },
+  { date: '2026-10-05', type: 'RAW', venue: 'Enterprise Center', city: 'St. Louis, MO', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-10-09', type: 'SmackDown', venue: 'Cajundome', city: 'Lafayette, LA', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-10-10', type: 'PLE', title: 'Money in the Bank', venue: 'Smoothie King Center', city: 'New Orleans, LA', tz: 'America/Chicago', localTime: '16:30' },
+  { date: '2026-10-12', type: 'RAW', venue: 'Brookshire Grocery Arena', city: 'Bossier City, LA', tz: 'America/Chicago', localTime: '18:30' },
+  { date: '2026-10-16', type: 'SmackDown', venue: 'Golden 1 Center', city: 'Sacramento, CA', tz: 'America/Los_Angeles', localTime: '16:30' },
+  { date: '2026-10-19', type: 'RAW', venue: 'Pechanga Arena', city: 'San Diego, CA', tz: 'America/Los_Angeles', localTime: '16:30' },
+  { date: '2026-10-23', type: 'SmackDown', venue: 'Toyota Arena', city: 'Ontario, CA', tz: 'America/Los_Angeles', localTime: '16:30' },
+  { date: '2026-10-26', type: 'RAW', venue: 'Save Mart Center', city: 'Fresno, CA', tz: 'America/Los_Angeles', localTime: '16:30' },
+  { date: '2026-10-30', type: 'SmackDown', venue: 'Charleston Coliseum', city: 'Charleston, WV', tz: 'America/New_York', localTime: '19:30' },
+
+  // November — reguläre TV-Termine ab Mitte November noch nicht angekündigt;
+  // nur der bestätigte RAW-Auftakt + Survivor Series stehen fest.
+  { date: '2026-11-02', type: 'RAW', venue: 'Barclays Center', city: 'Brooklyn, NY', tz: 'America/New_York', localTime: '19:30' },
+  { date: '2026-11-28', type: 'PLE', title: 'Survivor Series: WarGames', venue: 'Daikin Park', city: 'Houston, TX', tz: 'America/Chicago', localTime: '16:30' },
+
+  // Dezember — Australien-Tour (Perth), Wrestlepalooza als Highlight
+  { date: '2026-12-11', type: 'SmackDown', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
+  { date: '2026-12-12', type: 'PLE', title: 'Wrestlepalooza', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
+  { date: '2026-12-14', type: 'RAW', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
+
+  // Januar 2027 — Europa-Tour (Road to Royal Rumble)
+  { date: '2027-01-15', type: 'SmackDown', venue: 'Forest National', city: 'Brussels, Belgium', tz: 'Europe/Brussels', localTime: '19:30' },
+  { date: '2027-01-18', type: 'RAW', venue: 'OVO Hydro', city: 'Glasgow, Scotland', tz: 'Europe/London', localTime: '19:30' },
+  { date: '2027-01-22', type: 'SmackDown', venue: 'Co-Op Live', city: 'Manchester, England', tz: 'Europe/London', localTime: '19:30' },
+  { date: '2027-01-25', type: 'RAW', venue: '3Arena', city: 'Dublin, Ireland', tz: 'Europe/Dublin', localTime: '19:30' },
+
+  // Februar 2027
+  { date: '2027-02-19', type: 'SmackDown', venue: 'Spectrum Center', city: 'Charlotte, NC', tz: 'America/New_York', localTime: '19:30' },
 ]
 
 export function getUpcomingEvents(): CalendarEvent[] {
@@ -139,12 +175,16 @@ export function getUpcomingEvents(): CalendarEvent[] {
 }
 
 // Datum, an dem die Liste zuletzt aktualisiert wurde (bei jeder Pflege anpassen).
-export const CALENDAR_LAST_UPDATED = '2026-06-30'
+export const CALENDAR_LAST_UPDATED = '2026-08-31'
 
 // Erinnerung auslösen, wenn weniger als so viele Tage Vorlauf bleiben …
 const REFRESH_RUNWAY_DAYS = 28
 // … oder die Liste seit so vielen Tagen nicht mehr gepflegt wurde.
 const REFRESH_MAX_AGE_DAYS = 56
+// Fehlende-Wochen nur im nahen Zeitfenster melden. Die weit entfernte, dünn
+// besetzte Tour-/Feiertagsphase (TV-Termine oft noch nicht angekündigt) soll
+// nicht dauerhaft als „Lücke" gemeldet werden — dagegen kann man eh nichts tun.
+const GAP_HORIZON_DAYS = 42
 
 function dayDiff(aISO: string, bISO: string): number {
   return Math.round((Date.parse(aISO + 'T00:00:00Z') - Date.parse(bISO + 'T00:00:00Z')) / 86400000)
@@ -194,8 +234,8 @@ export function missingShowWeeks(now: Date = new Date()): {
   const lastWk = mondayOfISO(lastBroadcast)
   while (cur <= lastWk) {
     const end = addDaysISO(cur, 6)
-    // nur aktuelle/zukünftige Wochen, die von späteren Events eingeschlossen sind
-    if (end >= todayISO && lastBroadcast > end) {
+    // nur aktuelle/nahe Wochen, die von späteren Events eingeschlossen sind
+    if (end >= todayISO && lastBroadcast > end && dayDiff(cur, todayISO) <= GAP_HORIZON_DAYS) {
       const present = cover.get(cur) ?? new Set<ShowType>()
       const missing: ShowType[] = []
       if (!present.has('RAW')) missing.push('RAW')

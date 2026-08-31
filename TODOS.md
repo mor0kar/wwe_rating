@@ -347,6 +347,20 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-035] Kalender-Refresh Sep 2026 – Feb 2027 + Gap-Horizont
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Kompletter Abgleich gegen die offizielle WWE-Eventseite (Paste vom 31.08.2026). Kalender lief nur bis Money in the Bank (10.10.) — jetzt durchgängig bis SmackDown Charlotte (19.02.2027).
+- **Akzeptanzkriterium:** Alle RAW/SmackDown/PLE/SNM aus dem Paste eingepflegt; AAA/NXT-Events gefiltert; `/upcoming` zeigt keine Flut an „Woche fehlt"-Warnungen für die ferne, unangekündigte Tour.
+- **Evidenz:** August 2026. `lib/calendar.ts`:
+  (1) Sep–Feb ergänzt (u.a. Survivor Series: WarGames 28.11. Houston, Wrestlepalooza 12.12. Perth als PLE; Europa-Tour Jan 2027 Brüssel/Glasgow/Manchester/Dublin). Startzeiten der bestehenden Sep-Einträge (Mexico City, MITB) auf Paste-Werte korrigiert.
+  (2) **Gefiltert (AAA/NXT-Regel):** Triplemanía 34 N1 (11.09. Las Vegas) + N2 (13.09. Mexico City), AAA-Event 24.10. Mexico City. **Worlds Collide (26.09. Chicago, WWE/AAA/NXT-YouTube)** vorerst draußen — Grenzfall, auf Zuruf leicht als PLE aktivierbar. **Crown Jewel (11.10., Saudi-Arabien)** war nicht im Paste → fehlt, per Custom-Event oder nächstem Paste nachtragbar.
+  (3) `missingShowWeeks()` auf `GAP_HORIZON_DAYS = 42` begrenzt — meldet nur nahe, echte Lücken statt der dünn besetzten Feiertags-/Auslandsphase.
+  (4) `CALENDAR_LAST_UPDATED='2026-08-31'`; neue TZ-Optionen (Perth, Brüssel, Dublin) im Custom-Event-Dropdown.
+  `npx tsc --noEmit` sauber, `npx vitest run` 21/21 grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
