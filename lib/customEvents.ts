@@ -35,7 +35,7 @@ function write(events: CustomEvent[]) {
   window.dispatchEvent(new Event(SYNC_EVENT))
 }
 
-export function addCustomEvent(ev: Omit<CalendarEvent, never>): CustomEvent {
+export function addCustomEvent(ev: CalendarEvent): CustomEvent {
   const id = `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
   const created: CustomEvent = { ...ev, id, custom: true }
   write([...read(), created])
@@ -43,7 +43,7 @@ export function addCustomEvent(ev: Omit<CalendarEvent, never>): CustomEvent {
 }
 
 // Bestehendes Custom-Event aktualisieren (ID + custom-Flag bleiben erhalten).
-export function updateCustomEvent(id: string, ev: Omit<CalendarEvent, never>) {
+export function updateCustomEvent(id: string, ev: CalendarEvent) {
   write(read().map(e => (e.id === id ? { ...ev, id, custom: true } : e)))
 }
 

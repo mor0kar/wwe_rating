@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { calendarStatus } from '@/lib/calendar'
+import { fmtDateFull } from '@/lib/format'
 
 const KEY = 'calReminderDismiss'
 const SNOOZE_DAYS = 7
@@ -34,9 +35,7 @@ export default function CalendarReminder() {
     setStatus(null)
   }
 
-  const lastDate = new Date(status.lastEventDate + 'T12:00:00').toLocaleDateString('de-DE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  })
+  const lastDate = fmtDateFull(status.lastEventDate)
   const runwayText =
     status.daysUntilLastEvent <= 0
       ? 'Der Kalender ist abgelaufen.'

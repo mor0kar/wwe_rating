@@ -15,5 +15,8 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Statische Artwork-/PWA-Dateien (Header, Logos, Manifest) sind nicht schützenswert —
+  // sie vom PIN-Check auszunehmen spart Middleware-Invocations und hält das
+  // PWA-Manifest auch ohne Cookie erreichbar (sonst bricht "Add to Homescreen").
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|header.jpg|icons/|manifest.webmanifest).*)'],
 }

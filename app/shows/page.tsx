@@ -9,6 +9,7 @@ import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calen
 import ScoreRing from '@/app/components/ScoreRing'
 import CalendarReminder from '@/app/components/CalendarReminder'
 import { useIdentity } from '@/lib/identity'
+import { fmtDateFull, fmtDateShort } from '@/lib/format'
 
 type Show = {
   id: number
@@ -204,9 +205,7 @@ function ShowCard({
   const spoilerActive = hideUntilRated && !!me && myScore === undefined && !revealed
 
   const a = avgScore(Object.values(show.ratings))
-  const dateStr = new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  })
+  const dateStr = fmtDateFull(show.date)
   const persons = Object.keys(show.ratings)
 
   async function handleSave(updated: Omit<Show, 'id'>) {
@@ -368,6 +367,56 @@ function ShowCard({
   )
 }
 
+// --- "Offen"-Listen ------------------------------------------------------
+
+// Karte mit pulsierendem Punkt-Header — teilt sich "Für dich offen" und
+// "Noch zu bewerten" (unterscheiden sich nur in Farbe + Datenquelle).
+function TodoSection({ title, count, dotClass, borderClass, children }: {
+  title: string
+  count: number
+  dotClass: string
+  borderClass?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="max-w-6xl mx-auto px-4 mb-6">
+      <div className={`bg-zinc-900 border ${borderClass ?? 'border-zinc-800'} rounded-2xl p-4`}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className={`w-2 h-2 rounded-full animate-pulse ${dotClass}`} />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">{title}</h2>
+          <span className="text-xs text-zinc-500">({count})</span>
+        </div>
+        <div className="space-y-2.5">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+// Eine To-do-Zeile: Logo + Titel + Datum + Bewerten-Button
+function TodoRow({ type, title, date, buttonClass, onRate }: {
+  type: string
+  title?: string
+  date: string
+  buttonClass: string
+  onRate: () => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <ShowLogo type={type} title={title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
+        <span className="text-sm text-zinc-200 truncate">{title || type}</span>
+        <span className="text-xs text-zinc-600 shrink-0">{fmtDateShort(date)}</span>
+      </div>
+      <button
+        onClick={onRate}
+        className={`shrink-0 text-xs ${buttonClass} text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wide transition-colors`}
+      >
+        Bewerten
+      </button>
+    </div>
+  )
+}
+
 // --- Main Page ----------------------------------------------------------
 
 export default function ShowsPage() {
@@ -420,7 +469,7 @@ export default function ShowsPage() {
       <div className="relative overflow-hidden mb-8">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/header.png')" }}
+          style={{ backgroundImage: "url('/header.jpg')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/60 via-zinc-950/75 to-zinc-950" />
         <div className="absolute inset-0 texture-grain opacity-[0.07] mix-blend-overlay pointer-events-none" />
@@ -438,68 +487,34 @@ export default function ShowsPage() {
 
       {/* Für dich noch offen — angelegte Shows, die ich selbst nicht bewertet habe */}
       {myName && myPending.length > 0 && (
-        <div className="max-w-6xl mx-auto px-4 mb-6">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">Für dich noch offen</h2>
-              <span className="text-xs text-zinc-500">({myPending.length})</span>
-            </div>
-            <div className="space-y-2.5">
-              {myPending.map(s => {
-                const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-                return (
-                  <div key={s.id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <ShowLogo type={s.type} title={s.title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
-                      <span className="text-sm text-zinc-200 truncate">{s.title || s.type}</span>
-                      <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
-                    </div>
-                    <button
-                      onClick={() => router.push(`/shows/${s.id}`)}
-                      className="shrink-0 text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wide transition-colors"
-                    >
-                      Bewerten
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
+        <TodoSection title="Für dich noch offen" count={myPending.length} dotClass="bg-amber-500">
+          {myPending.map(s => (
+            <TodoRow
+              key={s.id}
+              type={s.type}
+              title={s.title}
+              date={s.date}
+              buttonClass="bg-amber-600 hover:bg-amber-700"
+              onRate={() => router.push(`/shows/${s.id}`)}
+            />
+          ))}
+        </TodoSection>
       )}
 
       {/* Noch zu bewerten — gelaufene Events ohne angelegte Show */}
       {pending.length > 0 && (
-        <div className="max-w-6xl mx-auto px-4 mb-6">
-          <div className="bg-zinc-900 border border-red-900/50 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <h2 className="text-sm font-bold uppercase tracking-wide text-zinc-100">Noch zu bewerten</h2>
-              <span className="text-xs text-zinc-500">({pending.length})</span>
-            </div>
-            <div className="space-y-2.5">
-              {pending.map((ev, i) => {
-                const dateStr = new Date(ev.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-                return (
-                  <div key={i} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <ShowLogo type={ev.type} title={ev.title} heightClass="h-4" badgeClass="text-[10px] font-semibold px-2 py-0.5" />
-                      <span className="text-sm text-zinc-200 truncate">{ev.title || ev.type}</span>
-                      <span className="text-xs text-zinc-600 shrink-0">{dateStr}</span>
-                    </div>
-                    <button
-                      onClick={() => rateEvent(ev)}
-                      className="shrink-0 text-xs bg-[#DC0000] hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold uppercase tracking-wide transition-colors"
-                    >
-                      Bewerten
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
+        <TodoSection title="Noch zu bewerten" count={pending.length} dotClass="bg-red-500" borderClass="border-red-900/50">
+          {pending.map((ev, i) => (
+            <TodoRow
+              key={i}
+              type={ev.type}
+              title={ev.title}
+              date={ev.date}
+              buttonClass="bg-[#DC0000] hover:bg-red-700"
+              onRate={() => rateEvent(ev)}
+            />
+          ))}
+        </TodoSection>
       )}
 
       {/* Filter-Chips + Show-Liste */}

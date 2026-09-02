@@ -6,7 +6,9 @@
 // Später austauschbar gegen eine API, ohne dass die UI angefasst werden muss —
 // solange getUpcomingEvents() dieselbe Struktur (CalendarEvent[]) zurückgibt.
 
-export type ShowType = 'RAW' | 'SmackDown' | 'PLE' | 'SNM'
+import type { ShowType } from './showStyle'
+// Eine Quelle für den Show-Typ: lib/showStyle.ts (SHOW_TYPES). Hier nur re-exportiert.
+export type { ShowType }
 
 export type CalendarEvent = {
   date: string        // offizielles lokales Event-Datum, YYYY-MM-DD

@@ -15,21 +15,6 @@
 
 :root {
   background-color: #09090b;
-
-  --color-raw: #450a0a;
-  --color-raw-text: #f87171;
-  --color-sd: #172554;
-  --color-sd-text: #60a5fa;
-  --color-ple: #3b0764;
-  --color-ple-text: #c084fc;
-  --color-snm: #451a03;
-  --color-snm-text: #fbbf24;
-
-  /* WWE Farbpalette */
-  --color-wwe-red: #DC0000;
-  --color-wwe-red-dark: #A00000;
-  --color-wwe-gold: #FFD700;
-  --color-wwe-gold-dark: #C8A400;
 }
 
 /* Scrollbar verstecken — wird per Klasse scrollbar-none genutzt */
@@ -53,11 +38,6 @@
 /* Roter Text-Glow */
 @utility text-glow-red {
   text-shadow: 0 0 20px rgba(220,0,0,0.5), 0 0 40px rgba(220,0,0,0.3);
-}
-
-/* Goldener Text-Glow */
-@utility text-glow-gold {
-  text-shadow: 0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2);
 }
 
 /* Feine Film-Grain-Textur (als Overlay über Heroes) */

@@ -6,6 +6,7 @@ import RatingsView from './RatingsView'
 import HeaderScore from './HeaderScore'
 import { BORDER_ACCENT, TINT } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
+import { fmtDateFull } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,16 +20,14 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
 
   if (isNaN(numId)) notFound()
 
-  const shows = await sql`SELECT * FROM shows WHERE id = ${numId}` as unknown as ShowRow[]
+  // Unabhängige Queries parallel; Personen-Liste ermittelt unbewertet vs. bewertet
+  const [shows, ratings, allPersons] = await Promise.all([
+    sql`SELECT * FROM shows WHERE id = ${numId}` as unknown as Promise<ShowRow[]>,
+    sql`SELECT * FROM ratings WHERE show_id = ${numId} ORDER BY person_name` as unknown as Promise<RatingRow[]>,
+    sql`SELECT name FROM persons ORDER BY id` as unknown as Promise<PersonRow[]>,
+  ])
   if (!shows.length) notFound()
-
   const show = shows[0]
-  const ratings = await sql`
-    SELECT * FROM ratings WHERE show_id = ${numId} ORDER BY person_name
-  ` as unknown as RatingRow[]
-
-  // Alle Personen laden, um unbewertet vs. bewertet zu ermitteln
-  const allPersons = await sql`SELECT name FROM persons ORDER BY id` as unknown as PersonRow[]
 
   // Vorhandene Bewertungen als Map (Score + Note) für den Editor
   const existing: Record<string, { score: number; note: string | null }> = Object.fromEntries(
@@ -38,9 +37,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   const scores = ratings.map(r => Number(r.score))
   const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null
 
-  const dateStr = new Date(show.date + 'T12:00:00').toLocaleDateString('de-DE', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  })
+  const dateStr = fmtDateFull(show.date)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 pb-24 lg:pb-8">

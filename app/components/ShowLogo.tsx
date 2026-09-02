@@ -30,6 +30,7 @@ export default function ShowLogo({
         alt={title || type}
         className={`${heightClass} w-auto object-contain shrink-0 ${className}`}
         loading="lazy"
+        decoding="async"
         onError={() => setFailed(true)}
       />
     )

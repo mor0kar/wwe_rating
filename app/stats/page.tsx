@@ -2,6 +2,7 @@ import sql from '@/lib/db'
 import { SHOW_TYPES } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
 import { scoreColor, avgScore, scoreLabel } from '@/lib/score'
+import { fmtDateShort } from '@/lib/format'
 import ScoreTimeline from './ScoreTimeline'
 
 export const dynamic = 'force-dynamic'
@@ -11,23 +12,34 @@ type RatingRow = { show_id: number; person_name: string; score: number; note: st
 type PersonRow = { name: string }
 
 async function getStats() {
-  const shows = await sql`SELECT * FROM shows ORDER BY date DESC` as unknown as ShowRow[]
-  const ratings = await sql`SELECT * FROM ratings` as unknown as RatingRow[]
-  const persons = await sql`SELECT name FROM persons ORDER BY id` as unknown as PersonRow[]
+  // Unabhängige Queries parallel abfeuern
+  const [shows, ratings, persons] = await Promise.all([
+    sql`SELECT * FROM shows ORDER BY date DESC` as unknown as Promise<ShowRow[]>,
+    sql`SELECT * FROM ratings` as unknown as Promise<RatingRow[]>,
+    sql`SELECT name FROM persons ORDER BY id` as unknown as Promise<PersonRow[]>,
+  ])
+
+  // Lookups einmal aufbauen statt find()/filter() in Schleifen
+  const showById = new Map(shows.map(s => [s.id, s]))
+  const ratingsByShow = new Map<number, RatingRow[]>()
+  for (const r of ratings) {
+    const list = ratingsByShow.get(r.show_id)
+    if (list) list.push(r)
+    else ratingsByShow.set(r.show_id, [r])
+  }
 
   const showsWithRatings = shows.map(show => ({
     ...show,
     ratings: Object.fromEntries(
-      ratings.filter(r => r.show_id === show.id).map(r => [r.person_name, Number(r.score)])
+      (ratingsByShow.get(show.id) ?? []).map(r => [r.person_name, Number(r.score)])
     ) as Record<string, number>,
   }))
 
   const allScores = ratings.map(r => Number(r.score))
   const globalAvg = avgScore(allScores)
-  const pleScores = ratings.filter(r => {
-    const show = shows.find(s => s.id === r.show_id)
-    return show?.type === 'PLE'
-  }).map(r => Number(r.score))
+  const pleScores = ratings
+    .filter(r => showById.get(r.show_id)?.type === 'PLE')
+    .map(r => Number(r.score))
 
   const personStats = persons.map(p => {
     const sc = ratings.filter(r => r.person_name === p.name).map(r => Number(r.score))
@@ -55,7 +67,7 @@ async function getStats() {
   const danhausenMoments = ratings
     .filter(r => Number(r.score) > 10)
     .map(r => {
-      const show = shows.find(s => s.id === r.show_id)
+      const show = showById.get(r.show_id)
       return {
         person: r.person_name,
         score: Number(r.score),
@@ -141,6 +153,35 @@ function rankBadge(i: number) {
   if (i === 1) return 'text-zinc-300 font-semibold'
   if (i === 2) return 'text-amber-700 font-semibold'
   return 'text-zinc-500'
+}
+
+// Ranking-Zeile für Top-/Flop-Listen: Rang + Logo + Titel + Balken + Score
+function ShowRankRow({ show, rank, rankClass }: {
+  show: { id: number; type: string; title: string; date: string; avg: number | null }
+  rank: number
+  rankClass: string
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className={`text-sm w-5 text-center ${rankClass}`}>{rank}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {showTypeBadge(show.type, 'h-3.5', show.title)}
+          <span className="text-sm text-zinc-100 truncate">{show.title || show.type}</span>
+          <span className="text-xs text-zinc-500">{fmtDateShort(show.date)}</span>
+        </div>
+      </div>
+      <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${barColor(show.avg!)}`}
+          style={{ width: `${Math.min((show.avg! / 10) * 100, 100)}%` }}
+        />
+      </div>
+      <span className={`text-sm font-semibold w-8 text-right ${scoreColor(show.avg!)}`}>
+        {show.avg!.toFixed(1)}
+      </span>
+    </div>
+  )
 }
 
 // Auszeichnungs-Karte für die Kritiker-Typen
@@ -322,30 +363,9 @@ export default async function StatsPage() {
                 Top 5 Shows
               </h2>
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                {stats.topShows.map((s, i) => {
-                  const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-                  return (
-                    <div key={s.id} className="flex items-center gap-3">
-                      <span className={`text-sm w-5 text-center ${rankBadge(i)}`}>{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {showTypeBadge(s.type, 'h-3.5', s.title)}
-                          <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
-                          <span className="text-xs text-zinc-500">{dateStr}</span>
-                        </div>
-                      </div>
-                      <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${barColor(s.avg!)}`}
-                          style={{ width: `${Math.min((s.avg! / 10) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className={`text-sm font-semibold w-8 text-right ${scoreColor(s.avg!)}`}>
-                        {s.avg!.toFixed(1)}
-                      </span>
-                    </div>
-                  )
-                })}
+                {stats.topShows.map((s, i) => (
+                  <ShowRankRow key={s.id} show={s} rank={i + 1} rankClass={rankBadge(i)} />
+                ))}
               </div>
             </div>
 
@@ -355,30 +375,9 @@ export default async function StatsPage() {
                 Flop 3 Shows
               </h2>
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-                {stats.flopShows.map((s, i) => {
-                  const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-                  return (
-                    <div key={s.id} className="flex items-center gap-3">
-                      <span className="text-sm w-5 text-center text-zinc-500">{i + 1}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {showTypeBadge(s.type, 'h-3.5', s.title)}
-                          <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
-                          <span className="text-xs text-zinc-500">{dateStr}</span>
-                        </div>
-                      </div>
-                      <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${barColor(s.avg!)}`}
-                          style={{ width: `${Math.min((s.avg! / 10) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <span className={`text-sm font-semibold w-8 text-right ${scoreColor(s.avg!)}`}>
-                        {s.avg!.toFixed(1)}
-                      </span>
-                    </div>
-                  )
-                })}
+                {stats.flopShows.map((s, i) => (
+                  <ShowRankRow key={s.id} show={s} rank={i + 1} rankClass="text-zinc-500" />
+                ))}
               </div>
             </div>
           </div>
@@ -393,14 +392,13 @@ export default async function StatsPage() {
             <p className="text-xs text-zinc-500 mb-3">Shows mit der größten Uneinigkeit</p>
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
               {stats.controversialShows.map(s => {
-                const dateStr = new Date(s.date + 'T12:00:00').toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
                 return (
                   <div key={s.id} className="flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {showTypeBadge(s.type, 'h-3.5', s.title)}
                         <span className="text-sm text-zinc-100 truncate">{s.title || s.type}</span>
-                        <span className="text-xs text-zinc-500">{dateStr}</span>
+                        <span className="text-xs text-zinc-500">{fmtDateShort(s.date)}</span>
                       </div>
                     </div>
                     <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">{s.min.toFixed(1)}–{s.max.toFixed(1)}</span>

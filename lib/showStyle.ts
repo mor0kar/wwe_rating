@@ -35,7 +35,7 @@ const PLE_LOGOS: { match: string[]; url: string }[] = [
 
 // Generisches PLE-Bild als Fallback (statt Text-Badge), wenn kein spezifisches Logo passt:
 // die transparente "PREMIUM LIVE EVENT"-Wortmarke.
-const PLE_PLACEHOLDER = '/icons/ple-generic-wordmark-nobg.png'
+const PLE_PLACEHOLDER = '/icons/ple-wordmark-480.png'
 
 // Liefert die Logo-URL für eine Show. Unbekannte PLEs bekommen ein generisches
 // PLE-Bild (plePlaceholder: 'emblem' = kompakt, 'wordmark' = groß, 'none' = Badge).

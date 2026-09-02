@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { scoreColor, scoreLabel, avgScore } from '@/lib/score'
+import { fmt, scoreColor, scoreLabel, avgScore } from '@/lib/score'
 import { useIdentity } from '@/lib/identity'
 
 type RatingRow = { person_name: string; score: number; note: string | null }
@@ -65,7 +65,7 @@ export default function RatingsView({ ratings }: { ratings: RatingRow[] }) {
                   {isMe && <span className="text-xs text-zinc-500 ml-1.5">(du)</span>}
                 </span>
                 <span className={`text-base font-semibold ${isDanhausen ? 'text-purple-400 font-bold' : scoreColor(score)}`}>
-                  {isDanhausen ? `⚡${scoreLabel(score).replace('⚡', '')}` : scoreLabel(score)}
+                  {isDanhausen ? `⚡${fmt(score)}` : scoreLabel(score)}
                 </span>
               </div>
               {isDanhausen && (

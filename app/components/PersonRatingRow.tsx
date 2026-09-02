@@ -69,6 +69,7 @@ export default function PersonRatingRow({
             />
             <input
               type="number"
+              inputMode="decimal"
               min={0}
               max={10}
               step={0.1}
@@ -101,6 +102,7 @@ export default function PersonRatingRow({
                 <span className="text-xs text-zinc-500">Bonus:</span>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   max={5}
                   step={0.1}

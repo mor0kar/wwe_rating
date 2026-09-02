@@ -361,6 +361,26 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-036] Codebase-Cleanup: Perf, Refactoring, UX-Feinschliff
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Aufräum-Pass über die ganze Codebase: Duplikation rausfaktorisiert, Performance-Bremsen beseitigt, UX-Inkonsistenzen behoben.
+- **Evidenz:** September 2026.
+  **Performance:**
+  (1) `public/header.png` (2,6 MB!) → `header.jpg` 239 KB; PLE-Wordmark 824 KB → 122 KB (480px); ungenutztes Photoroom-PNG gelöscht. `public/` von ~4 MB auf ~370 KB.
+  (2) `proxy.ts`-Matcher: Artwork + PWA-Manifest vom PIN-Check ausgenommen — spart Middleware-Invocations, Manifest bleibt ohne Cookie erreichbar (Add-to-Homescreen).
+  (3) API `GET /api/shows` + `/stats`: Ratings einmal per Map gruppiert statt O(Shows×Ratings)-Filter; Stats + Show-Detail: DB-Queries via `Promise.all` parallel.
+  (4) `POST/PATCH` Shows: Ratings als ein Bulk-INSERT statt Schleife.
+  **Refactoring:**
+  (5) Neue `lib/format.ts` (fmtDateFull/fmtDateShort/dateParts) ersetzt 12× verstreutes `toLocaleDateString`-Muster.
+  (6) `ShowType` nur noch in `lib/showStyle.ts` definiert; `calendar.ts` re-exportiert.
+  (7) `CustomEventForm` (inkl. 12h/24h-Helfer) aus `upcoming/page.tsx` (562 Z.) in eigene Datei; Top5/Flop3 (`ShowRankRow`) und "offen"-Listen (`TodoSection`/`TodoRow`) dedupliziert; toter CSS-Code (ungenutzte :root-Farben, text-glow-gold) entfernt.
+  **UX:**
+  (8) Custom-Event-Entfernen: Inline-Bestätigung statt `window.confirm` (konsistent mit Rest-App); größere Tap-Targets für Bearbeiten/Entfernen; `inputMode` auf Zahlen-Inputs (mobile Tastatur); `decoding="async"` auf Logos.
+  `npx tsc --noEmit` sauber, 21/21 Tests grün, `next build` grün, Smoke-Test: Assets 200 ohne Cookie, Seiten weiter PIN-gated (307).
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

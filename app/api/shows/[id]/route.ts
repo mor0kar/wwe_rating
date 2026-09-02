@@ -35,16 +35,19 @@ export async function PATCH(
     WHERE id = ${showId}
   `
 
-  // Bestehende Ratings löschen und neu einsetzen
+  // Bestehende Ratings löschen und in einem Statement neu einsetzen
   await sql`DELETE FROM ratings WHERE show_id = ${showId}`
 
-  for (const [person, score] of Object.entries(ratings)) {
-    if (score === null || score === undefined) continue
-    const note = notes?.[person] ?? null
-    await sql`
-      INSERT INTO ratings (show_id, person_name, score, note)
-      VALUES (${showId}, ${person}, ${score}, ${note})
-    `
+  const rows = Object.entries(ratings)
+    .filter(([, score]) => score !== null && score !== undefined)
+    .map(([person, score]) => ({
+      show_id: showId,
+      person_name: person,
+      score,
+      note: notes?.[person] ?? null,
+    }))
+  if (rows.length) {
+    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note')}`
   }
 
   return NextResponse.json({ ok: true })
