@@ -1,5 +1,5 @@
 // Score als Ring-Gauge (reines SVG). Funktioniert in Server- & Client-Components.
-// Ring füllt sich bis 10; Scores >10 (DANHAUSEN) füllen voll + Lila-Glow.
+// Ring füllt sich bis 10; Overflow-Scores >10 (⚡ Holy Shit!) füllen voll + Lila-Glow.
 import { fmt, scoreHex } from '@/lib/score'
 
 export default function ScoreRing({
@@ -16,12 +16,12 @@ export default function ScoreRing({
   const frac = Math.max(0, Math.min(value, 10)) / 10
   const offset = circumference * (1 - frac)
   const color = scoreHex(value)
-  const danhausen = value > 10
+  const overflow = value > 10
   const fontSize = size * 0.32
 
   return (
     <div
-      className={`relative shrink-0 ${danhausen ? 'drop-shadow-[0_0_10px_rgba(192,132,252,0.55)]' : ''}`}
+      className={`relative shrink-0 ${overflow ? 'drop-shadow-[0_0_10px_rgba(192,132,252,0.55)]' : ''}`}
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>

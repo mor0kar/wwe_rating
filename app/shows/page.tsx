@@ -3,12 +3,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
-import PersonRatingRow from '@/app/components/PersonRatingRow'
-import { fmt, scoreColor, avgScore } from '@/lib/score'
+import PersonRatingRow, { draftTotal } from '@/app/components/PersonRatingRow'
+import { fmt, scoreColor, avgScore, MOMENT_META, type Moment } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
 import CalendarReminder from '@/app/components/CalendarReminder'
 import { useIdentity } from '@/lib/identity'
+import { useCustomEvents } from '@/lib/customEvents'
 import { fmtDateFull, fmtDateShort } from '@/lib/format'
 
 type Show = {
@@ -19,6 +20,7 @@ type Show = {
   comment?: string | null
   ratings: Record<string, number>
   notes: Record<string, string | null>
+  moments: Record<string, string | null>
 }
 
 
@@ -40,10 +42,11 @@ function EditCard({
   const [baseRatings, setBaseRatings] = useState<Record<string, number>>(() => {
     return { ...show.ratings }
   })
-  const [danhausen, setDanhausen] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {}
+  // Moment-Totale bleiben erhalten: bonus startet 0 → base±0 = gespeicherter Score
+  const [moment, setMoment] = useState<Record<string, Moment | null>>(() => {
+    const init: Record<string, Moment | null> = {}
     Object.keys(show.ratings).forEach(p => {
-      init[p] = !!(show.notes?.[p])
+      init[p] = (show.moments?.[p] as Moment | null) ?? null
     })
     return init
   })
@@ -67,15 +70,16 @@ function EditCard({
     setSaving(true)
     const effectiveRatings: Record<string, number> = {}
     const effectiveNotes: Record<string, string> = {}
+    const effectiveMoments: Record<string, Moment> = {}
     Object.keys(baseRatings).forEach(p => {
-      const base = baseRatings[p] ?? 0
-      const bonus = danhausen[p] ? (bonuses[p] ?? 0) : 0
-      effectiveRatings[p] = base + bonus
-      if (danhausen[p] && notes[p]) {
-        effectiveNotes[p] = notes[p]
+      const m = moment[p] ?? null
+      effectiveRatings[p] = draftTotal({ base: baseRatings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
+      if (m) {
+        effectiveMoments[p] = m
+        if (notes[p]) effectiveNotes[p] = notes[p]
       }
     })
-    await onSave({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes })
+    await onSave({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes, moments: effectiveMoments })
     setSaving(false)
   }
 
@@ -148,13 +152,13 @@ function EditCard({
               draft={{
                 active: true,
                 base: baseRatings[p] ?? 0,
-                danhausen: danhausen[p] ?? false,
+                moment: moment[p] ?? null,
                 bonus: bonuses[p] ?? 0,
                 note: notes[p] ?? '',
               }}
               onChange={patch => {
                 if ('base' in patch) setBaseRatings(r => ({ ...r, [p]: patch.base! }))
-                if ('danhausen' in patch) setDanhausen(d => ({ ...d, [p]: patch.danhausen! }))
+                if ('moment' in patch) setMoment(m => ({ ...m, [p]: patch.moment! }))
                 if ('bonus' in patch) setBonuses(b => ({ ...b, [p]: patch.bonus! }))
                 if ('note' in patch) setNotes(n => ({ ...n, [p]: patch.note! }))
               }}
@@ -308,23 +312,22 @@ function ShowCard({
         <div className="flex flex-wrap gap-1.5">
           {persons.map(p => {
             const note = show.notes?.[p]
-            const isDanhausen = !!(note && note.trim() !== '')
+            const moment = (show.moments?.[p] as Moment | null) ?? null
+            const style = moment === 'up'
+              ? { chip: 'bg-purple-950/60 ring-1 ring-purple-500/40 cursor-help', name: 'text-purple-300', score: 'text-purple-400' }
+              : moment === 'down'
+              ? { chip: 'bg-red-950/60 ring-1 ring-red-500/40 cursor-help', name: 'text-red-300', score: 'text-red-400' }
+              : { chip: 'bg-zinc-800/80', name: 'text-zinc-400', score: scoreColor(show.ratings[p]) }
             return (
               <div
                 key={p}
-                className={`flex items-center gap-1.5 rounded-full pl-2.5 pr-2 py-1 transition-colors ${
-                  isDanhausen
-                    ? 'bg-purple-950/60 ring-1 ring-purple-500/40 cursor-help'
-                    : 'bg-zinc-800/80'
-                }`}
-                title={isDanhausen ? `⚡ ${note}` : undefined}
-                onClick={isDanhausen ? e => e.stopPropagation() : undefined}
+                className={`flex items-center gap-1.5 rounded-full pl-2.5 pr-2 py-1 transition-colors ${style.chip}`}
+                title={moment && note ? `${MOMENT_META[moment].icon} ${note}` : undefined}
+                onClick={moment ? e => e.stopPropagation() : undefined}
               >
-                <span className={`text-xs ${isDanhausen ? 'text-purple-300' : 'text-zinc-400'}`}>{p}</span>
-                <span className={`text-sm font-heading font-semibold tabular-nums ${
-                  isDanhausen ? 'text-purple-400' : scoreColor(show.ratings[p])
-                }`}>
-                  {isDanhausen ? `⚡${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
+                <span className={`text-xs ${style.name}`}>{p}</span>
+                <span className={`text-sm font-heading font-semibold tabular-nums ${style.score}`}>
+                  {moment ? `${MOMENT_META[moment].icon}${fmt(show.ratings[p])}` : fmt(show.ratings[p])}
                 </span>
               </div>
             )
@@ -422,6 +425,7 @@ function TodoRow({ type, title, date, buttonClass, onRate }: {
 export default function ShowsPage() {
   const router = useRouter()
   const { me } = useIdentity()
+  const { events: customEvents } = useCustomEvents()
   const [filter, setFilter] = useState('Alle')
   const [loading, setLoading] = useState(true)
 
@@ -440,11 +444,19 @@ export default function ShowsPage() {
   const shows = filter === 'Alle' ? allShows : allShows.filter(s => s.type === filter)
   const existingKeys = new Set(allShows.map(s => `${s.type}|${s.date}`))
 
-  // Gelaufene Kalender-Events ohne angelegte Show → "noch zu bewerten"
+  // Gelaufene Kalender-Events ohne angelegte Show → "noch zu bewerten".
+  // Custom-Events (localStorage) zählen mit — sonst wären selbst angelegte
+  // Termine hier unsichtbar. Getapte Folgen erst ab Ausstrahlung (airsOn),
+  // vorher kann sie niemand gesehen haben.
   const now = Date.now()
-  const pending = getUpcomingEvents().filter(
-    ev => eventInstant(ev).getTime() < now && !existingKeys.has(`${ev.type}|${ev.date}`)
-  )
+  const todayISO = new Date().toISOString().split('T')[0]
+  const pending = [...getUpcomingEvents(), ...customEvents]
+    .filter(ev => {
+      if (existingKeys.has(`${ev.type}|${ev.date}`)) return false
+      if (ev.taped && ev.airsOn) return ev.airsOn <= todayISO
+      return eventInstant(ev).getTime() < now
+    })
+    .sort((a, b) => a.date.localeCompare(b.date))
 
   // Angelegte Shows, die ich (laut Identität) selbst noch nicht bewertet habe
   const myName = me

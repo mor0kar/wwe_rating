@@ -22,3 +22,6 @@ Numerierung beginnt mit `002`, weil `001` implizit `db/schema.sql` ist
 
 - [`002_shows_comment.sql`](002_shows_comment.sql) — neue Spalte `shows.comment`
   für interne Spitznamen ("Die Stuhl-Match-Folge")
+- [`003_ratings_moment.sql`](003_ratings_moment.sql) — neue Spalte `ratings.moment`
+  ('up' = ⚡ Holy Shit!, 'down' = 👎 Heat); Backfill: bestehende Wertungen mit
+  Begründung → 'up'. Ausgeführt 2026-09-02 via Supabase MCP.

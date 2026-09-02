@@ -1,14 +1,14 @@
 import sql from '@/lib/db'
 import { SHOW_TYPES } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
-import { scoreColor, avgScore, scoreLabel } from '@/lib/score'
+import { scoreColor, avgScore, momentLabel, MOMENT_META, type Moment } from '@/lib/score'
 import { fmtDateShort } from '@/lib/format'
 import ScoreTimeline from './ScoreTimeline'
 
 export const dynamic = 'force-dynamic'
 
 type ShowRow = { id: number; type: string; date: string; title: string }
-type RatingRow = { show_id: number; person_name: string; score: number; note: string | null }
+type RatingRow = { show_id: number; person_name: string; score: number; note: string | null; moment: Moment | null }
 type PersonRow = { name: string }
 
 async function getStats() {
@@ -63,21 +63,21 @@ async function getStats() {
     .filter((s): s is { id: number; date: string; type: string; title: string; avg: number } => s.avg !== null)
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  // DANHAUSEN-Momente: alle Einzelwertungen > 10 (Overflow-Skala) inkl. Begründung
-  const danhausenMoments = ratings
-    .filter(r => Number(r.score) > 10)
-    .map(r => {
-      const show = showById.get(r.show_id)
-      return {
-        person: r.person_name,
-        score: Number(r.score),
-        note: r.note ?? null,
-        type: show?.type ?? '',
-        title: show?.title ?? '',
-        date: show?.date ?? '',
-      }
-    })
-    .sort((a, b) => b.score - a.score)
+  // Besondere Momente mit Begründung: ⚡ Holy Shit! (up) und 👎 Heat (down).
+  const toMoment = (r: RatingRow) => {
+    const show = showById.get(r.show_id)
+    return {
+      person: r.person_name,
+      score: Number(r.score),
+      note: r.note ?? null,
+      type: show?.type ?? '',
+      title: show?.title ?? '',
+      date: show?.date ?? '',
+    }
+  }
+  // Holy Shit! nach Score absteigend (bester zuerst), Heat aufsteigend (schlimmster zuerst)
+  const holyShitMoments = ratings.filter(r => r.moment === 'up').map(toMoment).sort((a, b) => b.score - a.score)
+  const heatMoments = ratings.filter(r => r.moment === 'down').map(toMoment).sort((a, b) => a.score - b.score)
 
   // Streit-o-Meter: Shows mit der größten Spannweite zwischen den Wertungen
   const controversialShows = showsWithRatings
@@ -123,7 +123,8 @@ async function getStats() {
     flopShows: [...showAvgs].reverse().slice(0, 3),
     typeStats,
     timeline,
-    danhausenMoments,
+    holyShitMoments,
+    heatMoments,
     controversialShows,
     awards,
   }
@@ -174,12 +175,45 @@ function ShowRankRow({ show, rank, rankClass }: {
       <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
         <div
           className={`h-full rounded-full ${barColor(show.avg!)}`}
-          style={{ width: `${Math.min((show.avg! / 10) * 100, 100)}%` }}
+          style={{ width: `${Math.max(0, Math.min((show.avg! / 10) * 100, 100))}%` }}
         />
       </div>
       <span className={`text-sm font-semibold w-8 text-right ${scoreColor(show.avg!)}`}>
         {show.avg!.toFixed(1)}
       </span>
+    </div>
+  )
+}
+
+type MomentEntry = { person: string; score: number; note: string | null; type: string; title: string; date: string }
+
+// Liste besonderer Momente (Holy Shit! oder Heat) mit Score, Show und Begründung.
+function MomentSection({ moment, moments }: { moment: Moment; moments: MomentEntry[] }) {
+  if (!moments.length) return null
+  const scoreClass = moment === 'up' ? 'text-purple-400' : 'text-red-400'
+  const heading = moment === 'up' ? 'Holy Shit!-Momente' : 'Heat-Momente'
+  return (
+    <div className="mb-8">
+      <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide mb-3">
+        {MOMENT_META[moment].icon} {heading}
+      </h2>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
+        {moments.map((m, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <span className={`font-heading text-2xl font-bold tabular-nums shrink-0 ${scoreClass}`}>
+              {momentLabel(moment, m.score)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {showTypeBadge(m.type, 'h-3.5', m.title)}
+                <span className="text-sm text-zinc-100 truncate">{m.title || m.type}</span>
+                <span className="text-xs text-zinc-500">· {m.person}</span>
+              </div>
+              {m.note && <p className="text-xs text-zinc-400 italic mt-0.5">„{m.note}"</p>}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -233,31 +267,9 @@ export default async function StatsPage() {
           ))}
         </div>
 
-        {/* DANHAUSEN-Momente: alle Overflow-Wertungen >10 mit Begründung */}
-        {stats.danhausenMoments.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-base font-semibold text-zinc-50 uppercase tracking-wide mb-3">
-              ⚡ DANHAUSEN-Momente
-            </h2>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3">
-              {stats.danhausenMoments.map((m, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="font-heading text-2xl font-bold text-purple-400 tabular-nums shrink-0">
-                    {scoreLabel(m.score)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {showTypeBadge(m.type, 'h-3.5', m.title)}
-                      <span className="text-sm text-zinc-100 truncate">{m.title || m.type}</span>
-                      <span className="text-xs text-zinc-500">· {m.person}</span>
-                    </div>
-                    {m.note && <p className="text-xs text-zinc-400 italic mt-0.5">„{m.note}"</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Besondere Momente mit Begründung — Highlights und Tiefpunkte der Saison */}
+        <MomentSection moment="up" moments={stats.holyShitMoments} />
+        <MomentSection moment="down" moments={stats.heatMoments} />
 
         {/* Score-Verlauf über die Saison */}
         {stats.timeline.length >= 2 && (
@@ -317,7 +329,7 @@ export default async function StatsPage() {
                     <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${barColor(p.avg!)}`}
-                        style={{ width: `${Math.min((p.avg! / 10) * 100, 100)}%` }}
+                        style={{ width: `${Math.max(0, Math.min((p.avg! / 10) * 100, 100))}%` }}
                       />
                     </div>
                     <span className={`text-sm font-semibold w-8 text-right ${scoreColor(p.avg!)}`}>
@@ -343,7 +355,7 @@ export default async function StatsPage() {
                     <div className="flex-[2] bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${TYPE_BAR[t.type] || 'bg-zinc-500'}`}
-                        style={{ width: `${Math.min((t.avg! / 10) * 100, 100)}%` }}
+                        style={{ width: `${Math.max(0, Math.min((t.avg! / 10) * 100, 100))}%` }}
                       />
                     </div>
                     <span className={`text-sm font-semibold w-8 text-right ${scoreColor(t.avg!)}`}>

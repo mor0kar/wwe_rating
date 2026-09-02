@@ -2,9 +2,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useIdentity } from '@/lib/identity'
-import PersonRatingRow from '@/app/components/PersonRatingRow'
+import PersonRatingRow, { draftTotal } from '@/app/components/PersonRatingRow'
+import type { Moment } from '@/lib/score'
 
-type Existing = Record<string, { score: number; note: string | null }>
+type Existing = Record<string, { score: number; note: string | null; moment: 'up' | 'down' | null }>
 
 type Props = {
   showId: number
@@ -35,12 +36,13 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
   const [active, setActive] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(persons.map(p => [p, p in existing || (spoilerMode && p === me)]))
   )
-  // Basiswert = vorhandener Score (DANHAUSEN-Totale bleiben erhalten), sonst 7
+  // Basiswert = vorhandener Score (Moment-Totale bleiben erhalten, weil bonus mit 0
+  // startet → base±0 = gespeicherter Score), sonst 7
   const [base, setBase] = useState<Record<string, number>>(() =>
     Object.fromEntries(persons.map(p => [p, existing[p]?.score ?? 7]))
   )
-  const [danhausen, setDanhausen] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(persons.map(p => [p, !!existing[p]?.note]))
+  const [moment, setMoment] = useState<Record<string, Moment | null>>(() =>
+    Object.fromEntries(persons.map(p => [p, existing[p]?.moment ?? null]))
   )
   const [bonus, setBonus] = useState<Record<string, number>>(() =>
     Object.fromEntries(persons.map(p => [p, 0]))
@@ -56,14 +58,13 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
     // damit die Bewertungen der anderen unangetastet bleiben.
     if (spoilerMode && me) {
       if (active[me]) {
-        const b = base[me] ?? 0
-        const bo = danhausen[me] ? (bonus[me] ?? 0) : 0
-        const score = b + bo
-        const note = danhausen[me] && notes[me] ? notes[me] : null
+        const m = moment[me] ?? null
+        const score = draftTotal({ base: base[me] ?? 0, moment: m, bonus: bonus[me] ?? 0 })
+        const note = m && notes[me] ? notes[me] : null
         await fetch(`/api/shows/${showId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ person: me, score, note }),
+          body: JSON.stringify({ person: me, score, note, moment: m }),
         })
       }
       setSaving(false)
@@ -75,17 +76,20 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
     // Normaler Modus: alle Bewertungen via PATCH ersetzen
     const ratings: Record<string, number> = {}
     const noteMap: Record<string, string> = {}
+    const momentMap: Record<string, Moment> = {}
     persons.forEach(p => {
       if (!active[p]) return
-      const b = base[p] ?? 0
-      const bo = danhausen[p] ? (bonus[p] ?? 0) : 0
-      ratings[p] = b + bo
-      if (danhausen[p] && notes[p]) noteMap[p] = notes[p]
+      const m = moment[p] ?? null
+      ratings[p] = draftTotal({ base: base[p] ?? 0, moment: m, bonus: bonus[p] ?? 0 })
+      if (m) {
+        momentMap[p] = m
+        if (notes[p]) noteMap[p] = notes[p]
+      }
     })
     await fetch(`/api/shows/${showId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, date, title, comment, ratings, notes: noteMap }),
+      body: JSON.stringify({ type, date, title, comment, ratings, notes: noteMap, moments: momentMap }),
     })
     setSaving(false)
     setOpen(false)
@@ -143,14 +147,14 @@ export default function RatingEditor({ showId, type, date, title, comment: initi
             draft={{
               active: active[p] ?? false,
               base: base[p] ?? 0,
-              danhausen: danhausen[p] ?? false,
+              moment: moment[p] ?? null,
               bonus: bonus[p] ?? 0,
               note: notes[p] ?? '',
             }}
             onChange={patch => {
               if ('active' in patch) setActive(a => ({ ...a, [p]: patch.active! }))
               if ('base' in patch) setBase(r => ({ ...r, [p]: patch.base! }))
-              if ('danhausen' in patch) setDanhausen(d => ({ ...d, [p]: patch.danhausen! }))
+              if ('moment' in patch) setMoment(m => ({ ...m, [p]: patch.moment! }))
               if ('bonus' in patch) setBonus(bn => ({ ...bn, [p]: patch.bonus! }))
               if ('note' in patch) setNotes(n => ({ ...n, [p]: patch.note! }))
             }}

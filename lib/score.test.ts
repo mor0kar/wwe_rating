@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fmt, scoreColor, scoreLabel, avgScore } from './score'
+import { fmt, scoreColor, scoreLabel, momentColor, momentLabel, avgScore } from './score'
 
 describe('fmt', () => {
   it('hängt mind. eine Dezimalstelle an', () => {
@@ -19,9 +19,14 @@ describe('fmt', () => {
 })
 
 describe('scoreColor', () => {
-  it('DANHAUSEN-Lila nur für >10', () => {
+  it('Overflow-Lila nur für >10', () => {
     expect(scoreColor(10.01)).toContain('purple')
     expect(scoreColor(10)).not.toContain('purple')
+  })
+  it('Heat-Rot (bold) für Werte unter 0', () => {
+    expect(scoreColor(-0.5)).toContain('red-500')
+    expect(scoreColor(-0.5)).toContain('font-bold')
+    expect(scoreColor(0)).not.toContain('font-bold')
   })
   it('Schwellen grün/amber/rot', () => {
     expect(scoreColor(7)).toContain('green')
@@ -36,6 +41,25 @@ describe('scoreLabel', () => {
     expect(scoreLabel(12)).toBe('⚡12.0')
     expect(scoreLabel(9.5)).toBe('9.5')
     expect(scoreLabel(10)).toBe('10.0')
+  })
+  it('Daumen-Präfix unter 0', () => {
+    expect(scoreLabel(-2)).toBe('👎-2.0')
+    expect(scoreLabel(0)).toBe('0.0')
+  })
+})
+
+describe('momentColor / momentLabel', () => {
+  it('up → lila mit ⚡, auch bei Score ≤10', () => {
+    expect(momentColor('up', 8)).toContain('purple')
+    expect(momentLabel('up', 8)).toBe('⚡8.0')
+  })
+  it('down → rot mit 👎, auch bei positivem Score', () => {
+    expect(momentColor('down', 3)).toContain('red-500')
+    expect(momentLabel('down', 3)).toBe('👎3.0')
+  })
+  it('ohne Moment → normale Schwellen/Labels', () => {
+    expect(momentColor(null, 7)).toContain('green')
+    expect(momentLabel(null, 7)).toBe('7.0')
   })
 })
 

@@ -109,10 +109,16 @@ Show-Typ Badges:
 - NXT → `bg-green-50 text-green-800`
 
 Score-Farben:
-- `>10` → `text-purple-600 font-bold` (DANHAUSEN-Skala, ⚡-Prefix)
-- `≥7` → `text-green-600`
-- `≥4` → `text-amber-600`
-- `<4` → `text-red-500`
+- `>10` → `text-purple-400 font-bold` (⚡ Holy Shit!-Overflow, ⚡-Prefix)
+- `<0` → `text-red-500 font-bold` (👎 Heat-Overflow, 👎-Prefix)
+- `≥7` → `text-green-400`
+- `≥4` → `text-amber-500`
+- `<4` → `text-red-400`
+
+Besondere Momente (`ratings.moment`, zentral in `lib/score.ts`):
+- `'up'` = ⚡ **Holy Shit!-Moment** — Bonus 0–5 auf den Basis-Score, lila, mit Begründung
+- `'down'` = 👎 **Heat** — Malus 0–5 (wird abgezogen), rot, mit Begründung
+- Helfer: `momentColor()`, `momentLabel()`, `MOMENT_META`, `draftTotal()` (in `PersonRatingRow`)
 
 Fonts:
 - Headlines/Wordmark/Scores: **Oswald** (athletic/condensed) via `next/font/google`, geladen in `app/layout.tsx`, als CSS-Var `--font-oswald` → Theme-Token `--font-heading` (Utility `font-heading`). h1/h2/h3 nutzen sie automatisch (`@layer base` in `globals.css`).
@@ -153,11 +159,13 @@ shows   (id SERIAL PK, type VARCHAR(20) CHECK IN ('RAW','SmackDown','PLE','SNM',
          date DATE, title VARCHAR(200), comment VARCHAR(300), created_at TIMESTAMPTZ)
 ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
          person_name VARCHAR(100), score DECIMAL(4,2), note TEXT,
+         moment TEXT CHECK IN ('up','down'),
          UNIQUE(show_id, person_name))
 ```
 
 - `shows.comment` — interner Spitzname für die Folge ("Die Stuhl-Match-Folge")
-- `ratings.note` — DANHAUSEN-Begründung, wird in der Übersicht als Hover-Tooltip angezeigt
+- `ratings.moment` — besonderer Moment: `'up'` = ⚡ Holy Shit! (Bonus, lila), `'down'` = 👎 Heat (Malus, rot), `NULL` = normal
+- `ratings.note` — Begründung für den besonderen Moment, wird in der Übersicht als Hover-Tooltip angezeigt
 
 ---
 

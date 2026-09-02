@@ -17,6 +17,7 @@ export async function PATCH(
     comment,
     ratings,
     notes,
+    moments,
   }: {
     type: string
     date: string
@@ -24,6 +25,7 @@ export async function PATCH(
     comment?: string
     ratings: Record<string, number>
     notes?: Record<string, string>
+    moments?: Record<string, 'up' | 'down'>
   } = await req.json()
 
   await sql`
@@ -45,9 +47,10 @@ export async function PATCH(
       person_name: person,
       score,
       note: notes?.[person] ?? null,
+      moment: moments?.[person] ?? null,
     }))
   if (rows.length) {
-    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note')}`
+    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}`
   }
 
   return NextResponse.json({ ok: true })
@@ -62,7 +65,12 @@ export async function POST(
   const showId = parseInt(id, 10)
   if (isNaN(showId)) return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
 
-  const { person, score, note }: { person: string; score: number; note?: string } = await req.json()
+  const { person, score, note, moment }: {
+    person: string
+    score: number
+    note?: string
+    moment?: 'up' | 'down' | null
+  } = await req.json()
 
   if (!person || typeof person !== 'string') {
     return NextResponse.json({ error: 'person is required' }, { status: 400 })
@@ -72,11 +80,12 @@ export async function POST(
   }
 
   await sql`
-    INSERT INTO ratings (show_id, person_name, score, note)
-    VALUES (${showId}, ${person}, ${score}, ${note ?? null})
+    INSERT INTO ratings (show_id, person_name, score, note, moment)
+    VALUES (${showId}, ${person}, ${score}, ${note ?? null}, ${moment ?? null})
     ON CONFLICT (show_id, person_name)
-    DO UPDATE SET score = EXCLUDED.score,
-                  note  = EXCLUDED.note
+    DO UPDATE SET score  = EXCLUDED.score,
+                  note   = EXCLUDED.note,
+                  moment = EXCLUDED.moment
   `
 
   return NextResponse.json({ ok: true })

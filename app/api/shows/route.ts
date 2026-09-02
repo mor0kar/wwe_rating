@@ -12,21 +12,27 @@ export async function GET(req: NextRequest) {
   const ratings = await sql`SELECT * FROM ratings`
 
   // Ratings einmal nach show_id gruppieren (statt pro Show doppelt zu filtern)
-  const byShow = new Map<number, { ratings: Record<string, number>; notes: Record<string, string | null> }>()
+  const byShow = new Map<number, {
+    ratings: Record<string, number>
+    notes: Record<string, string | null>
+    moments: Record<string, string | null>
+  }>()
   for (const r of ratings) {
     let entry = byShow.get(r.show_id)
     if (!entry) {
-      entry = { ratings: {}, notes: {} }
+      entry = { ratings: {}, notes: {}, moments: {} }
       byShow.set(r.show_id, entry)
     }
     entry.ratings[r.person_name] = Number(r.score)
     entry.notes[r.person_name] = r.note ?? null
+    entry.moments[r.person_name] = r.moment ?? null
   }
 
   const data = shows.map(show => ({
     ...show,
     ratings: byShow.get(show.id)?.ratings ?? {},
     notes: byShow.get(show.id)?.notes ?? {},
+    moments: byShow.get(show.id)?.moments ?? {},
   }))
 
   return NextResponse.json(data)
@@ -40,6 +46,7 @@ export async function POST(req: NextRequest) {
     comment,
     ratings,
     notes,
+    moments,
   }: {
     type: string
     date: string
@@ -47,6 +54,7 @@ export async function POST(req: NextRequest) {
     comment?: string
     ratings: Record<string, number>
     notes?: Record<string, string>
+    moments?: Record<string, 'up' | 'down'>
   } = await req.json()
 
   const [show] = await sql`
@@ -63,9 +71,10 @@ export async function POST(req: NextRequest) {
       person_name: person,
       score,
       note: notes?.[person] ?? null,
+      moment: moments?.[person] ?? null,
     }))
   if (rows.length) {
-    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note')}`
+    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}`
   }
 
   return NextResponse.json({ ok: true, id: show.id })

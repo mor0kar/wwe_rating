@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   // CSV: jede Bewertung als Zeile; Shows ohne Bewertung erscheinen mit leeren Feldern
   const rows = (await sql`
     SELECT s.id AS show_id, s.date, s.type, s.title, s.comment,
-           r.person_name, r.score, r.note
+           r.person_name, r.score, r.note, r.moment
     FROM shows s
     LEFT JOIN ratings r ON r.show_id = s.id
     ORDER BY s.date, s.id, r.person_name
@@ -51,13 +51,14 @@ export async function GET(req: NextRequest) {
     person_name: string | null
     score: string | null
     note: string | null
+    moment: string | null
   }>
 
-  const header = ['show_id', 'date', 'type', 'title', 'comment', 'person', 'score', 'note']
+  const header = ['show_id', 'date', 'type', 'title', 'comment', 'person', 'score', 'note', 'moment']
   const lines = [header.join(',')]
   for (const r of rows) {
     lines.push(
-      [r.show_id, r.date, r.type, r.title, r.comment, r.person_name, r.score, r.note]
+      [r.show_id, r.date, r.type, r.title, r.comment, r.person_name, r.score, r.note, r.moment]
         .map(csvCell)
         .join(','),
     )

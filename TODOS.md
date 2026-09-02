@@ -381,6 +381,27 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-037] Custom-Events tauchen in "Noch zu bewerten" auf
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch (Bug)
+- **Beschreibung:** Selbst angelegte Custom-Events (z.B. RAW 31.08., das weder in unserer Liste noch bei WWE.com stand) erschienen nach dem Event-Datum nicht in der "Noch zu bewerten"-Liste auf `/shows` — die speiste sich nur aus der statischen Kalender-Liste. Custom-Events waren nur auf `/upcoming` sichtbar.
+- **Evidenz:** September 2026. `app/shows/page.tsx`: `useCustomEvents()` in die `pending`-Berechnung gemergt (gleiche Quelle wie `/upcoming`), Liste nach Datum sortiert. Bonus-Fix: getapte Folgen zählen erst ab Ausstrahlung (`airsOn`) als offen — vorher kann sie niemand gesehen haben. `npx tsc --noEmit` sauber, `next build` grün.
+
+---
+
+### [WWE-038] Besondere Momente: Holy Shit! (⚡) + Heat (👎)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Der bisherige „DANHAUSEN"-Mechanismus (Bonus + Begründung für besondere Momente) wird umbenannt in **⚡ Holy Shit!-Moment** und bekommt ein negatives Gegenstück **👎 Heat** (Malus + Begründung, rot). Grund: „DANHAUSEN" war ein Insider ohne Bezug zur eigentlichen Funktion, und wir wollten auch besonders *schlechte* Momente markieren können.
+- **Akzeptanzkriterium:** Beim Bewerten pro Person zwischen „kein Moment / ⚡ Holy Shit! / 👎 Heat" wählbar; Bonus addiert, Malus subtrahiert (Score darf negativ werden); Darstellung lila bzw. rot mit Icon + Begründung überall (Übersicht, Detail, Stats); Stats zeigt getrennte „Holy Shit!"- und „Heat"-Sektionen; Export enthält `moment`-Spalte.
+- **Evidenz:** September 2026.
+  **DB:** Migration `003_ratings_moment.sql` (Spalte `moment TEXT CHECK IN ('up','down')`), via Supabase MCP ausgeführt; Backfill der 29 bestehenden Wertungen-mit-Begründung → `'up'`. End-to-End-Roundtrip (up/down/null) verifiziert.
+  **Fundament:** `lib/score.ts` — `Moment`-Typ, `MOMENT_META`, `momentColor()`, `momentLabel()`, Negativ-Farbschwelle (`<0` → rot bold, 👎-Prefix). `PersonRatingRow`: Checkbox → Zwei-Richtungs-Picker (⚡/👎) + `draftTotal()`-Helfer.
+  **Durchgereicht:** API (POST/PATCH shows + Einzel-Rating), Add-Form, Inline-EditCard, Detail-RatingEditor (inkl. Spoiler-Modus), Übersichts-Chips, Detail-RatingsView, Stats (zwei Sektionen), CSV-Export.
+  `npx tsc --noEmit` sauber, **26/26 Tests** grün (5 neue für momentColor/momentLabel/Negativ-Scores), `next build` grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

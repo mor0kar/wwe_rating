@@ -1,9 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { fmt, scoreColor, scoreLabel, avgScore } from '@/lib/score'
+import { scoreColor, scoreLabel, momentColor, momentLabel, MOMENT_META, avgScore, type Moment } from '@/lib/score'
 import { useIdentity } from '@/lib/identity'
 
-type RatingRow = { person_name: string; score: number; note: string | null }
+type RatingRow = { person_name: string; score: number; note: string | null; moment: Moment | null }
 
 export default function RatingsView({ ratings }: { ratings: RatingRow[] }) {
   const { me, hideUntilRated } = useIdentity()
@@ -55,7 +55,8 @@ export default function RatingsView({ ratings }: { ratings: RatingRow[] }) {
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-4 space-y-3">
         {ratings.map(r => {
           const score = Number(r.score)
-          const isDanhausen = !!(r.note && r.note.trim() !== '')
+          const moment = r.moment ?? null
+          const hasNote = !!(r.note && r.note.trim() !== '')
           const isMe = me === r.person_name
           return (
             <div key={r.person_name}>
@@ -64,12 +65,14 @@ export default function RatingsView({ ratings }: { ratings: RatingRow[] }) {
                   {r.person_name}
                   {isMe && <span className="text-xs text-zinc-500 ml-1.5">(du)</span>}
                 </span>
-                <span className={`text-base font-semibold ${isDanhausen ? 'text-purple-400 font-bold' : scoreColor(score)}`}>
-                  {isDanhausen ? `⚡${fmt(score)}` : scoreLabel(score)}
+                <span className={`text-base font-semibold ${momentColor(moment, score)}`}>
+                  {momentLabel(moment, score)}
                 </span>
               </div>
-              {isDanhausen && (
-                <p className="text-xs text-purple-300 italic mt-0.5">⚡ {r.note}</p>
+              {moment && hasNote && (
+                <p className={`text-xs italic mt-0.5 ${moment === 'up' ? 'text-purple-300' : 'text-red-300'}`}>
+                  {MOMENT_META[moment].icon} {r.note}
+                </p>
               )}
             </div>
           )

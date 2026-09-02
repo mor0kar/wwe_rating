@@ -2,7 +2,8 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SHOW_TYPES } from '@/lib/showStyle'
-import PersonRatingRow from '@/app/components/PersonRatingRow'
+import PersonRatingRow, { draftTotal } from '@/app/components/PersonRatingRow'
+import type { Moment } from '@/lib/score'
 
 function AddShowForm() {
   const router = useRouter()
@@ -14,7 +15,7 @@ function AddShowForm() {
   const [comment, setComment] = useState('')
   const [ratings, setRatings] = useState<Record<string, number>>({})
   const [active, setActive] = useState<Record<string, boolean>>({})
-  const [danhausen, setDanhausen] = useState<Record<string, boolean>>({})
+  const [moment, setMoment] = useState<Record<string, Moment | null>>({})
   const [bonuses, setBonuses] = useState<Record<string, number>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -24,7 +25,7 @@ function AddShowForm() {
       setPersons(ps)
       setRatings(Object.fromEntries(ps.map(p => [p, 7])))
       setActive(Object.fromEntries(ps.map(p => [p, true])))
-      setDanhausen(Object.fromEntries(ps.map(p => [p, false])))
+      setMoment(Object.fromEntries(ps.map(p => [p, null])))
       setBonuses(Object.fromEntries(ps.map(p => [p, 0])))
       setNotes(Object.fromEntries(ps.map(p => [p, ''])))
     })
@@ -34,17 +35,20 @@ function AddShowForm() {
     setSaving(true)
     const effectiveRatings: Record<string, number> = {}
     const effectiveNotes: Record<string, string> = {}
+    const effectiveMoments: Record<string, Moment> = {}
     persons.forEach(p => {
       if (!active[p]) return
-      const base = ratings[p] ?? 0
-      const bonus = danhausen[p] ? (bonuses[p] ?? 0) : 0
-      effectiveRatings[p] = base + bonus
-      if (danhausen[p] && notes[p]) effectiveNotes[p] = notes[p]
+      const m = moment[p] ?? null
+      effectiveRatings[p] = draftTotal({ base: ratings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
+      if (m) {
+        effectiveMoments[p] = m
+        if (notes[p]) effectiveNotes[p] = notes[p]
+      }
     })
     await fetch('/api/shows', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes }),
+      body: JSON.stringify({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes, moments: effectiveMoments }),
     })
     router.push('/shows')
   }
@@ -129,14 +133,14 @@ function AddShowForm() {
                 draft={{
                   active: active[p] ?? true,
                   base: ratings[p] ?? 0,
-                  danhausen: danhausen[p] ?? false,
+                  moment: moment[p] ?? null,
                   bonus: bonuses[p] ?? 0,
                   note: notes[p] ?? '',
                 }}
                 onChange={patch => {
                   if ('active' in patch) setActive(a => ({ ...a, [p]: patch.active! }))
                   if ('base' in patch) setRatings(r => ({ ...r, [p]: patch.base! }))
-                  if ('danhausen' in patch) setDanhausen(d => ({ ...d, [p]: patch.danhausen! }))
+                  if ('moment' in patch) setMoment(m => ({ ...m, [p]: patch.moment! }))
                   if ('bonus' in patch) setBonuses(b => ({ ...b, [p]: patch.bonus! }))
                   if ('note' in patch) setNotes(n => ({ ...n, [p]: patch.note! }))
                 }}

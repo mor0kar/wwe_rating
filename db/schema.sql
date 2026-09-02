@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS ratings (
   person_name VARCHAR(100) NOT NULL,
   score DECIMAL(4,2) NOT NULL,
   note TEXT,
+  -- Besonderer Moment mit Begründung: 'up' = ⚡ Holy Shit! (Bonus, lila),
+  -- 'down' = 👎 Heat (Malus, rot), NULL = normale Wertung. Siehe migrations/003.
+  moment TEXT CHECK (moment IN ('up','down')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(show_id, person_name)
 );

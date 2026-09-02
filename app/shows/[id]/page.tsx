@@ -11,7 +11,7 @@ import { fmtDateFull } from '@/lib/format'
 export const dynamic = 'force-dynamic'
 
 type ShowRow = { id: number; type: string; date: string; title: string; comment: string | null }
-type RatingRow = { show_id: number; person_name: string; score: number; note: string | null }
+type RatingRow = { show_id: number; person_name: string; score: number; note: string | null; moment: 'up' | 'down' | null }
 type PersonRow = { name: string }
 
 export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,10 +29,11 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   if (!shows.length) notFound()
   const show = shows[0]
 
-  // Vorhandene Bewertungen als Map (Score + Note) für den Editor
-  const existing: Record<string, { score: number; note: string | null }> = Object.fromEntries(
-    ratings.map(r => [r.person_name, { score: Number(r.score), note: r.note ?? null }])
-  )
+  // Vorhandene Bewertungen als Map (Score + Note + Moment) für den Editor
+  const existing: Record<string, { score: number; note: string | null; moment: 'up' | 'down' | null }> =
+    Object.fromEntries(
+      ratings.map(r => [r.person_name, { score: Number(r.score), note: r.note ?? null, moment: r.moment ?? null }])
+    )
 
   const scores = ratings.map(r => Number(r.score))
   const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null
@@ -77,6 +78,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
           person_name: r.person_name,
           score: Number(r.score),
           note: r.note ?? null,
+          moment: r.moment ?? null,
         }))}
       />
 

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { fmt, scoreColor, scoreHex } from '@/lib/score'
+import { scoreColor, scoreHex, scoreLabel } from '@/lib/score'
 import { getShowLogo, BADGE } from '@/lib/showStyle'
 
 export type TimelinePoint = {
@@ -32,7 +32,9 @@ export default function ScoreTimeline({
 
   const yMax = Math.max(10, Math.ceil(Math.max(...data.map(d => d.avg))))
   const xAt = (i: number) => padL + (i / (data.length - 1)) * innerW
-  const yAt = (v: number) => padT + innerH - (Math.min(v, yMax) / yMax) * innerH
+  // Plot-Position auf [0, yMax] klemmen — negative Schnitte (theoretisch via Heat)
+  // sitzen sauber auf der Nulllinie statt off-canvas; Tooltip zeigt den echten Wert.
+  const yAt = (v: number) => padT + innerH - (Math.max(0, Math.min(v, yMax)) / yMax) * innerH
 
   const linePts = data.map((d, i) => `${xAt(i).toFixed(1)},${yAt(d.avg).toFixed(1)}`).join(' ')
   const areaPath =
@@ -164,7 +166,7 @@ export default function ScoreTimeline({
           <div className="flex items-center justify-between gap-4">
             <span className="text-[11px] text-zinc-500">{fmtDate(active.date)}</span>
             <span className={`text-sm font-heading font-bold tabular-nums ${scoreColor(active.avg)}`}>
-              {active.avg > 10 ? `⚡${fmt(active.avg)}` : fmt(active.avg)}
+              {scoreLabel(active.avg)}
             </span>
           </div>
         </div>
