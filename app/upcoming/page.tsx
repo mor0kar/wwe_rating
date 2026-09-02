@@ -95,7 +95,16 @@ export default function UpcomingPage() {
     router.push(`/shows/add?${params.toString()}`)
   }
 
-  const gaps = missingShowWeeks()
+  // Manuell nachgetragene Shows zählen als Abdeckung → keine Falsch-Lücken mehr:
+  // Custom-Events (Kalender) + bereits angelegte DB-Shows (Typ+Datum aus dem Key).
+  const coverageExtra = [
+    ...customEvents,
+    ...Object.keys(existingShows).map(k => {
+      const [type, date] = k.split('|')
+      return { type, date }
+    }),
+  ]
+  const gaps = missingShowWeeks(coverageExtra)
 
   // Eine Event-Karte — geteilt von "kommend" und "vergangen"
   function renderEvent(ev: CalendarEvent, key: React.Key) {

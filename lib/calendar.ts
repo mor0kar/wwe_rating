@@ -206,10 +206,18 @@ function addDaysISO(iso: string, n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Minimale Form, die für die Abdeckungsrechnung reicht (Custom-Events, DB-Shows).
+type CoverageEvent = { type: string; date: string; airsOn?: string }
+
 // Wochen innerhalb des gebuchten Zeitraums, in denen RAW oder SmackDown fehlt.
 // Getapte Folgen zählen für ihre Ausstrahlungswoche (airsOn).
 // Die auslaufende letzte Woche wird ausgenommen (deckt die Update-Erinnerung ab).
-export function missingShowWeeks(now: Date = new Date()): {
+//
+// `extraEvents` = manuell nachgetragene Shows (Custom-Events aus /upcoming oder
+// bereits angelegte DB-Shows). Sie erweitern nur die Abdeckung, NICHT den
+// betrachteten Zeitraum — sonst würde ein einzelnes fernes Custom-Event eine
+// Flut neuer „Lücken" erzeugen.
+export function missingShowWeeks(extraEvents: CoverageEvent[] = [], now: Date = new Date()): {
   weekStart: string
   weekEnd: string
   missing: ShowType[]
@@ -218,16 +226,20 @@ export function missingShowWeeks(now: Date = new Date()): {
   const weekly = EVENTS.filter(e => e.type === 'RAW' || e.type === 'SmackDown')
   if (!weekly.length) return []
 
-  const broadcastDate = (e: CalendarEvent) => e.airsOn ?? e.date
+  const broadcastDate = (e: CoverageEvent) => e.airsOn ?? e.date
 
-  // Abdeckung: Wochen-Montag → vorhandene Typen
+  // Abdeckung: Wochen-Montag → vorhandene Typen. Statische Liste + nachgetragene.
   const cover = new Map<string, Set<ShowType>>()
-  for (const e of weekly) {
-    const wk = mondayOfISO(broadcastDate(e))
+  const addCoverage = (type: string, date: string) => {
+    if (type !== 'RAW' && type !== 'SmackDown') return
+    const wk = mondayOfISO(date)
     if (!cover.has(wk)) cover.set(wk, new Set())
-    cover.get(wk)!.add(e.type)
+    cover.get(wk)!.add(type)
   }
+  for (const e of weekly) addCoverage(e.type, broadcastDate(e))
+  for (const e of extraEvents) addCoverage(e.type, broadcastDate(e))
 
+  // Zeitraum bleibt an der statischen Liste verankert (nur diese ist „gebucht").
   const dates = weekly.map(broadcastDate).sort()
   const lastBroadcast = dates[dates.length - 1]
   const result: { weekStart: string; weekEnd: string; missing: ShowType[] }[] = []

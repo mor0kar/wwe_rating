@@ -5,6 +5,7 @@ import {
   eventInstant,
   germanWatchTime,
   isValidTz,
+  missingShowWeeks,
   type CalendarEvent,
 } from './calendar'
 
@@ -17,6 +18,34 @@ describe('isValidTz', () => {
     expect(isValidTz('')).toBe(false)
     expect(isValidTz('Quatsch/Unsinn')).toBe(false)
     expect(isValidTz('GMT+2')).toBe(false)
+  })
+})
+
+describe('missingShowWeeks berücksichtigt nachgetragene Shows', () => {
+  // Fester Bezugspunkt in der bekannten November-Lücke (SmackDown fehlt Nov 2–8,
+  // da nach RAW 02.11. erst wieder SmackDown am 11.12. gebucht ist).
+  const NOW = new Date('2026-10-20T12:00:00Z')
+
+  it('nachgetragene Events erhöhen die Lücken nie (Monotonie)', () => {
+    const base = missingShowWeeks([], NOW)
+    const withExtra = missingShowWeeks([{ type: 'SmackDown', date: '2026-11-06' }], NOW)
+    expect(withExtra.length).toBeLessThanOrEqual(base.length)
+  })
+
+  it('eine nachgetragene Show schließt genau ihre Lücke', () => {
+    const base = missingShowWeeks([], NOW)
+    if (base.length === 0) return // Kalender geschlossen → nichts zu prüfen
+    const gap = base[0]
+    // Für jeden fehlenden Typ dieser Woche eine Show am Wochen-Montag nachtragen
+    const extra = gap.missing.map(type => ({ type, date: gap.weekStart }))
+    const after = missingShowWeeks(extra, NOW)
+    expect(after.some(g => g.weekStart === gap.weekStart)).toBe(false)
+  })
+
+  it('ignoriert nachgetragene Nicht-Wochenshows (PLE/SNM)', () => {
+    const base = missingShowWeeks([], NOW)
+    const withPle = missingShowWeeks([{ type: 'PLE', date: '2026-11-06' }], NOW)
+    expect(withPle.length).toBe(base.length)
   })
 })
 

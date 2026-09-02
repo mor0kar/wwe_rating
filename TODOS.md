@@ -402,6 +402,14 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-039] „Fehlende Shows"-Warnung erkennt nachgetragene Shows
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch (Bug)
+- **Beschreibung:** Nachdem man eine fehlende Show manuell als Custom-Event nachträgt, blieb die „Fehlende Shows"-Warnung auf `/upcoming` stehen — `missingShowWeeks()` schaute nur in die statische Kalender-Liste, nicht in die nachgetragenen Events.
+- **Evidenz:** September 2026. `lib/calendar.ts`: `missingShowWeeks(extraEvents, now)` nimmt jetzt nachgetragene Shows als zusätzliche Abdeckung entgegen — erweitert aber NICHT den betrachteten Zeitraum (verankert an der statischen Liste), damit ein fernes Custom-Event keine Scheinlücken erzeugt. `app/upcoming/page.tsx`: reicht Custom-Events + bereits angelegte DB-Shows (Typ+Datum) als Abdeckung rein. 3 neue Tests (Monotonie, Lücke-schließen, PLE/SNM ignoriert). `npx tsc --noEmit` sauber, 29/29 Tests grün, `next build` grün.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
