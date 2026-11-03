@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
 
-// PATCH /api/shows/[id] — Show-Metadaten und Ratings aktualisieren
+// PATCH /api/shows/[id] — Show-Metadaten und Ratings gezielt aktualisieren.
+// Merge statt Ersetzen: Es werden nur mitgeschickte Felder und Personen angefasst.
+// So löschen sich zwei gleichzeitig offene Editoren nicht gegenseitig die
+// Bewertungen (früher: alle Ratings löschen + Client-Stand neu einfügen).
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,45 +18,71 @@ export async function PATCH(
     date,
     title,
     comment,
-    ratings,
+    ratings = {},
     notes,
     moments,
+    removed = [],
   }: {
-    type: string
-    date: string
+    type?: string
+    date?: string
     title?: string
     comment?: string
-    ratings: Record<string, number>
+    ratings?: Record<string, number>   // Upsert pro Person
     notes?: Record<string, string>
     moments?: Record<string, 'up' | 'down'>
+    removed?: string[]                  // explizit entfernte Personen
   } = await req.json()
 
-  await sql`
-    UPDATE shows
-    SET type    = ${type},
-        date    = ${date},
-        title   = ${title ?? ''},
-        comment = ${comment ?? ''}
-    WHERE id = ${showId}
-  `
-
-  // Bestehende Ratings löschen und in einem Statement neu einsetzen
-  await sql`DELETE FROM ratings WHERE show_id = ${showId}`
-
-  const rows = Object.entries(ratings)
-    .filter(([, score]) => score !== null && score !== undefined)
-    .map(([person, score]) => ({
-      show_id: showId,
-      person_name: person,
-      score,
-      note: notes?.[person] ?? null,
-      moment: moments?.[person] ?? null,
-    }))
-  if (rows.length) {
-    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}`
+  if (Object.values(ratings).some(score => typeof score !== 'number' || isNaN(score))) {
+    return NextResponse.json({ error: 'scores must be numbers' }, { status: 400 })
   }
 
-  return NextResponse.json({ ok: true })
+  // Metadaten nur aktualisieren, wenn sie mitgeschickt wurden
+  const meta: Record<string, string> = {}
+  if (type !== undefined) meta.type = type
+  if (date !== undefined) meta.date = date
+  if (title !== undefined) meta.title = title
+  if (comment !== undefined) meta.comment = comment
+
+  const rows = Object.entries(ratings).map(([person, score]) => ({
+    show_id: showId,
+    person_name: person,
+    score,
+    note: notes?.[person] ?? null,
+    moment: moments?.[person] ?? null,
+  }))
+
+  await sql.begin(async tx => {
+    if (Object.keys(meta).length) {
+      await tx`UPDATE shows SET ${tx(meta)} WHERE id = ${showId}`
+    }
+    if (removed.length) {
+      await tx`DELETE FROM ratings WHERE show_id = ${showId} AND person_name IN ${tx(removed)}`
+    }
+    if (rows.length) {
+      await tx`
+        INSERT INTO ratings ${tx(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}
+        ON CONFLICT (show_id, person_name)
+        DO UPDATE SET score  = EXCLUDED.score,
+                      note   = EXCLUDED.note,
+                      moment = EXCLUDED.moment
+      `
+    }
+  })
+
+  // Aktuellen Stand zurückgeben (inkl. Bewertungen anderer), damit der Client
+  // nicht seinen eigenen, evtl. veralteten Stand anzeigt.
+  const [show] = await sql`SELECT * FROM shows WHERE id = ${showId}`
+  if (!show) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const current = await sql`SELECT person_name, score, note, moment FROM ratings WHERE show_id = ${showId}`
+  const result = {
+    ...show,
+    ratings: Object.fromEntries(current.map(r => [r.person_name, Number(r.score)])),
+    notes: Object.fromEntries(current.map(r => [r.person_name, r.note ?? null])),
+    moments: Object.fromEntries(current.map(r => [r.person_name, r.moment ?? null])),
+  }
+
+  return NextResponse.json({ ok: true, show: result })
 }
 
 // POST /api/shows/[id] — Einzelnes Rating einer Person hinzufügen oder aktualisieren

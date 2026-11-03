@@ -57,25 +57,49 @@ export async function POST(req: NextRequest) {
     moments?: Record<string, 'up' | 'down'>
   } = await req.json()
 
-  const [show] = await sql`
-    INSERT INTO shows (type, date, title, comment)
-    VALUES (${type}, ${date}, ${title || ''}, ${comment || ''})
-    RETURNING *
-  `
+  if (!type || !date || Object.values(ratings ?? {}).some(score => typeof score !== 'number' || isNaN(score))) {
+    return NextResponse.json({ error: 'invalid show' }, { status: 400 })
+  }
 
-  // Alle Ratings in einem Statement einfügen (statt einzeln pro Person)
-  const rows = Object.entries(ratings)
+  const toRows = (showId: number) => Object.entries(ratings ?? {})
     .filter(([, score]) => score !== null && score !== undefined)
     .map(([person, score]) => ({
-      show_id: show.id,
+      show_id: showId,
       person_name: person,
       score,
       note: notes?.[person] ?? null,
       moment: moments?.[person] ?? null,
     }))
-  if (rows.length) {
-    await sql`INSERT INTO ratings ${sql(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}`
-  }
 
-  return NextResponse.json({ ok: true, id: show.id })
+  const result = await sql.begin(async tx => {
+    // Tragen zwei Leute parallel dieselbe Folge ein (Typ + Datum), darf keine
+    // Doppel-Show entstehen: Advisory-Lock serialisiert, die zweite Eintragung
+    // ergänzt die bestehende Show. Vorhandene Bewertungen bleiben unangetastet.
+    await tx`SELECT pg_advisory_xact_lock(hashtext(${`${type}|${date}`}))`
+    const [existing] = await tx`SELECT id FROM shows WHERE type = ${type} AND date = ${date} ORDER BY id LIMIT 1`
+    if (existing) {
+      const rows = toRows(existing.id)
+      if (rows.length) {
+        await tx`
+          INSERT INTO ratings ${tx(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}
+          ON CONFLICT (show_id, person_name) DO NOTHING
+        `
+      }
+      return { id: existing.id as number, merged: true }
+    }
+
+    const [show] = await tx`
+      INSERT INTO shows (type, date, title, comment)
+      VALUES (${type}, ${date}, ${title || ''}, ${comment || ''})
+      RETURNING id
+    `
+    // Alle Ratings in einem Statement einfügen (statt einzeln pro Person)
+    const rows = toRows(show.id)
+    if (rows.length) {
+      await tx`INSERT INTO ratings ${tx(rows, 'show_id', 'person_name', 'score', 'note', 'moment')}`
+    }
+    return { id: show.id as number, merged: false }
+  })
+
+  return NextResponse.json({ ok: true, ...result })
 }

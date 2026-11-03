@@ -23,6 +23,17 @@ type Show = {
   moments: Record<string, string | null>
 }
 
+// Nur geänderte Felder/Personen — PATCH merged serverseitig
+type ShowPatch = {
+  type?: string
+  date?: string
+  title?: string
+  comment?: string
+  ratings: Record<string, number>
+  notes: Record<string, string>
+  moments: Record<string, Moment>
+}
+
 
 // --- Inline-Edit-Card --------------------------------------------------
 
@@ -32,7 +43,7 @@ function EditCard({
   onCancel,
 }: {
   show: Show
-  onSave: (updated: Omit<Show, 'id'>) => Promise<void>
+  onSave: (patch: ShowPatch) => Promise<boolean>
   onCancel: () => void
 }) {
   const [type, setType] = useState(show.type)
@@ -65,22 +76,35 @@ function EditCard({
     return init
   })
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSave() {
-    setSaving(true)
-    const effectiveRatings: Record<string, number> = {}
-    const effectiveNotes: Record<string, string> = {}
-    const effectiveMoments: Record<string, Moment> = {}
+    // Nur Änderungen schicken — sonst überschreibt ein veralteter Listen-Stand
+    // Bewertungen, die jemand anderes inzwischen geändert hat.
+    const patch: ShowPatch = { ratings: {}, notes: {}, moments: {} }
+    if (type !== show.type) patch.type = type
+    if (date !== show.date) patch.date = date
+    if (title !== show.title) patch.title = title
+    if (comment !== (show.comment ?? '')) patch.comment = comment
     Object.keys(baseRatings).forEach(p => {
       const m = moment[p] ?? null
-      effectiveRatings[p] = draftTotal({ base: baseRatings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
+      const total = draftTotal({ base: baseRatings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
+      const note = m && notes[p] ? notes[p] : null
+      const unchanged = Math.abs(show.ratings[p] - total) < 0.005
+        && (show.moments?.[p] ?? null) === m
+        && (!m || (show.notes?.[p] ?? null) === note)
+      if (unchanged) return
+      patch.ratings[p] = total
       if (m) {
-        effectiveMoments[p] = m
-        if (notes[p]) effectiveNotes[p] = notes[p]
+        patch.moments[p] = m
+        if (note) patch.notes[p] = note
       }
     })
-    await onSave({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes, moments: effectiveMoments })
+    setSaving(true)
+    setError(null)
+    const ok = await onSave(patch)
     setSaving(false)
+    if (!ok) setError('Speichern hat nicht geklappt. Bitte nochmal versuchen.')
   }
 
   return (
@@ -167,6 +191,8 @@ function EditCard({
         </div>
       </div>
 
+      {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
+
       {/* Aktionen */}
       <div className="flex gap-2 pt-1">
         <button
@@ -212,19 +238,27 @@ function ShowCard({
   const dateStr = fmtDateFull(show.date)
   const persons = Object.keys(show.ratings)
 
-  async function handleSave(updated: Omit<Show, 'id'>) {
-    await fetch(`/api/shows/${show.id}`, {
+  async function handleSave(patch: ShowPatch): Promise<boolean> {
+    const res = await fetch(`/api/shows/${show.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated),
-    })
-    onUpdated({ id: show.id, ...updated })
+      body: JSON.stringify(patch),
+    }).catch(() => null)
+    if (!res?.ok) return false
+    // Server liefert den aktuellen Stand inkl. Bewertungen anderer zurück
+    const { show: fresh }: { show: Show } = await res.json()
+    onUpdated(fresh)
     setMode('view')
+    return true
   }
 
   async function handleDelete() {
     setDeleting(true)
-    await fetch(`/api/shows/${show.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/shows/${show.id}`, { method: 'DELETE' }).catch(() => null)
+    if (!res?.ok) {
+      setDeleting(false)
+      return
+    }
     onDeleted(show.id)
   }
 
@@ -435,10 +469,18 @@ export default function ShowsPage() {
   const [allShows, setAllShows] = useState<Show[]>([])
 
   useEffect(() => {
-    fetch('/api/shows?type=all')
-      .then(r => r.json())
-      .then((data: Show[]) => { setAllShows(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    const load = () => fetch('/api/shows?type=all')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then((data: Show[]) => setAllShows(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+    load()
+    // Beim Zurückkehren in den Tab neu laden — sonst sieht man Bewertungen der
+    // anderen erst nach manuellem Reload, und "Noch zu bewerten" zeigt Folgen,
+    // die längst jemand angelegt hat.
+    const onVisible = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   const shows = filter === 'Alle' ? allShows : allShows.filter(s => s.type === filter)

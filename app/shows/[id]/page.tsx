@@ -85,9 +85,6 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
       {/* Bewertungen hinzufügen / anpassen */}
       <RatingEditor
         showId={numId}
-        type={show.type}
-        date={show.date}
-        title={show.title ?? ''}
         comment={show.comment ?? ''}
         persons={allPersons.map(p => p.name)}
         existing={existing}

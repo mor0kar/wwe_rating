@@ -19,6 +19,7 @@ function AddShowForm() {
   const [bonuses, setBonuses] = useState<Record<string, number>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/persons').then(r => r.json()).then((ps: string[]) => {
@@ -33,6 +34,7 @@ function AddShowForm() {
 
   async function handleSave() {
     setSaving(true)
+    setError(null)
     const effectiveRatings: Record<string, number> = {}
     const effectiveNotes: Record<string, string> = {}
     const effectiveMoments: Record<string, Moment> = {}
@@ -45,12 +47,20 @@ function AddShowForm() {
         if (notes[p]) effectiveNotes[p] = notes[p]
       }
     })
-    await fetch('/api/shows', {
+    const res = await fetch('/api/shows', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, date, title, comment, ratings: effectiveRatings, notes: effectiveNotes, moments: effectiveMoments }),
-    })
-    router.push('/shows')
+    }).catch(() => null)
+    if (!res?.ok) {
+      setError('Speichern hat nicht geklappt. Bitte nochmal versuchen.')
+      setSaving(false)
+      return
+    }
+    // Hatte jemand die Folge schon angelegt, wurde sie nur ergänzt (vorhandene
+    // Bewertungen bleiben) — dann direkt dorthin, damit man sieht, was drinsteht.
+    const { id, merged }: { id: number; merged: boolean } = await res.json()
+    router.push(merged ? `/shows/${id}` : '/shows')
   }
 
   return (
@@ -148,6 +158,8 @@ function AddShowForm() {
             ))}
           </div>
         </div>
+
+        {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
 
         <button
           onClick={handleSave}
