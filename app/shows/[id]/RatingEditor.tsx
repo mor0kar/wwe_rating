@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useIdentity } from '@/lib/identity'
-import PersonRatingRow, { draftTotal, type RatingDraft } from '@/app/components/PersonRatingRow'
-import type { Moment } from '@/lib/score'
+import PersonRatingRow, { draftTotal, MissingNotesHint, type RatingDraft } from '@/app/components/PersonRatingRow'
+import { missingMomentNote, type Moment } from '@/lib/score'
 
 type Existing = Record<string, { score: number; note: string | null; moment: 'up' | 'down' | null }>
 
@@ -54,7 +54,11 @@ export default function RatingEditor({ showId, comment: initialComment, persons,
     setOpen(true)
   }
 
+  // Wer ⚡/👎 gesetzt hat, muss begründen — bis dahin ist Speichern gesperrt
+  const missingNotes = editablePersons.filter(p => drafts[p]?.active && missingMomentNote(drafts[p].moment, drafts[p].note))
+
   async function handleSave() {
+    if (missingNotes.length) return
     // Nur Änderungen schicken: unveränderte Personen bleiben serverseitig
     // unangetastet, auch wenn jemand anderes sie inzwischen bearbeitet hat.
     const ratings: Record<string, number> = {}
@@ -70,7 +74,7 @@ export default function RatingEditor({ showId, comment: initialComment, persons,
         continue
       }
       const total = draftTotal(d)
-      const note = d.moment && d.note ? d.note : null
+      const note = d.moment && d.note.trim() ? d.note.trim() : null
       const unchanged = !!orig
         && Math.abs(orig.score - total) < 0.005
         && orig.moment === d.moment
@@ -162,6 +166,7 @@ export default function RatingEditor({ showId, comment: initialComment, persons,
         ))}
 
         {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
+        <MissingNotesHint names={missingNotes} />
 
         {/* Aktionen */}
         <div className="flex gap-2 pt-1">
@@ -173,7 +178,7 @@ export default function RatingEditor({ showId, comment: initialComment, persons,
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || missingNotes.length > 0}
             className="flex-1 bg-[#DC0000] hover:bg-red-700 text-white rounded-xl py-2 text-sm font-medium disabled:opacity-50 transition-colors"
           >
             {saving ? 'Speichern...' : 'Speichern'}

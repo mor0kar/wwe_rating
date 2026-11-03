@@ -464,6 +464,15 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-044] Begründung ist Pflicht bei ⚡ Holy Shit! / 👎 Heat
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Ein besonderer Moment darf nur mit Begründung gespeichert werden, damit später klar ist, warum so bewertet wurde.
+- **Umsetzung:** November 2026. Regel zentral in `lib/score.ts` (`missingMomentNote`). Bewertungs-Zeile markiert das leere Begründungsfeld (amber, „Pflichtfeld", `aria-invalid`); Add, Inline-Edit und Detail-Editor sperren „Speichern" und zeigen, bei wem die Begründung fehlt (`MissingNotesHint`). API (`POST /api/shows`, `PATCH`/`POST /api/shows/[id]`) antwortet mit 400 `moment needs note`; Leerzeichen zählen nicht. Altlast: 1 Holy-Shit-Bewertung ohne Begründung (RAW 07.09.2026, Jan) — wird beim nächsten Bearbeiten fällig.
+  4 neue Tests (46/46 grün), `next build` grün, API-Sperre lokal per `next start` geprüft.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

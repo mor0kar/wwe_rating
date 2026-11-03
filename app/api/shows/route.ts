@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
+import { missingMomentNote } from '@/lib/score'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
 
   if (!type || !date || Object.values(ratings ?? {}).some(score => typeof score !== 'number' || isNaN(score))) {
     return NextResponse.json({ error: 'invalid show' }, { status: 400 })
+  }
+  if (Object.keys(ratings ?? {}).some(p => missingMomentNote(moments?.[p], notes?.[p]))) {
+    return NextResponse.json({ error: 'moment needs note' }, { status: 400 })
   }
 
   const toRows = (showId: number) => Object.entries(ratings ?? {})

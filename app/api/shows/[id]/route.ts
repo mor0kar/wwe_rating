@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
+import { missingMomentNote } from '@/lib/score'
 
 // PATCH /api/shows/[id] — Show-Metadaten und Ratings gezielt aktualisieren.
 // Merge statt Ersetzen: Es werden nur mitgeschickte Felder und Personen angefasst.
@@ -35,6 +36,9 @@ export async function PATCH(
 
   if (Object.values(ratings).some(score => typeof score !== 'number' || isNaN(score))) {
     return NextResponse.json({ error: 'scores must be numbers' }, { status: 400 })
+  }
+  if (Object.keys(ratings).some(p => missingMomentNote(moments?.[p], notes?.[p]))) {
+    return NextResponse.json({ error: 'moment needs note' }, { status: 400 })
   }
 
   // Metadaten nur aktualisieren, wenn sie mitgeschickt wurden
@@ -106,6 +110,9 @@ export async function POST(
   }
   if (typeof score !== 'number') {
     return NextResponse.json({ error: 'score must be a number' }, { status: 400 })
+  }
+  if (missingMomentNote(moment, note)) {
+    return NextResponse.json({ error: 'moment needs note' }, { status: 400 })
   }
 
   await sql`

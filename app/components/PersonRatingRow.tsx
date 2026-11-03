@@ -1,5 +1,6 @@
 'use client'
-import { fmt, momentColor, MOMENT_META, type Moment } from '@/lib/score'
+import { useId } from 'react'
+import { fmt, momentColor, missingMomentNote, MOMENT_META, type Moment } from '@/lib/score'
 
 // Gemeinsame Bewertungs-Zeile für eine Person — genutzt von Add, Inline-Edit und Detail-Editor.
 // Eine einzige Quelle für Slider-Step (0.1), Score-Farbe und die besonderen Momente:
@@ -20,6 +21,17 @@ export function draftTotal(d: Pick<RatingDraft, 'base' | 'moment' | 'bonus'>): n
   return d.base
 }
 
+// Hinweis neben dem Speichern-Button: wer noch eine Begründung schuldet.
+// Die Editoren sperren das Speichern, solange die Liste nicht leer ist.
+export function MissingNotesHint({ names }: { names: string[] }) {
+  if (!names.length) return null
+  return (
+    <p className="text-xs text-amber-400" role="status">
+      Begründung für ⚡/👎 fehlt bei {names.join(', ')}
+    </p>
+  )
+}
+
 export default function PersonRatingRow({
   name,
   draft,
@@ -37,6 +49,8 @@ export default function PersonRatingRow({
   const shown = !showActiveToggle || active
   const total = draftTotal(draft)
   const clampedBase = Math.min(base, 10)
+  const noteMissing = missingMomentNote(moment, note)
+  const noteHintId = useId()
 
   // Moment-Toggle: Klick auf aktive Richtung schaltet aus, sonst umschalten.
   const toggleMoment = (dir: Moment) => onChange({ moment: moment === dir ? null : dir })
@@ -147,13 +161,22 @@ export default function PersonRatingRow({
                 type="text"
                 value={note}
                 onChange={e => onChange({ note: e.target.value })}
+                required
+                aria-label={`Begründung für ${MOMENT_META[moment].label} (Pflicht)`}
+                aria-invalid={noteMissing}
+                aria-describedby={noteMissing ? noteHintId : undefined}
                 placeholder={moment === 'up'
-                  ? 'Begründung (z.B. "Dieser Spot war unfassbar")'
-                  : 'Begründung (z.B. "Dieses Booking, ernsthaft?")'}
-                className={`w-full bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none placeholder:text-zinc-600 ${
-                  moment === 'up' ? 'focus:border-purple-500' : 'focus:border-red-500'
-                }`}
+                  ? 'Begründung* (z.B. "Dieser Spot war unfassbar")'
+                  : 'Begründung* (z.B. "Dieses Booking, ernsthaft?")'}
+                className={`w-full bg-zinc-950 border rounded-lg px-2 py-1 text-xs text-zinc-50 outline-none placeholder:text-zinc-600 ${
+                  noteMissing ? 'border-amber-500/60' : 'border-zinc-700'
+                } ${moment === 'up' ? 'focus:border-purple-500' : 'focus:border-red-500'}`}
               />
+              {noteMissing && (
+                <p id={noteHintId} className="text-[10px] text-amber-400">
+                  Pflichtfeld — damit später klar ist, warum {MOMENT_META[moment].icon}
+                </p>
+              )}
             </div>
           )}
         </div>

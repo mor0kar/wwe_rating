@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fmt, scoreColor, scoreLabel, momentColor, momentLabel, avgScore } from './score'
+import { fmt, scoreColor, scoreLabel, momentColor, momentLabel, avgScore, missingMomentNote } from './score'
 
 describe('fmt', () => {
   it('hängt mind. eine Dezimalstelle an', () => {
@@ -60,6 +60,24 @@ describe('momentColor / momentLabel', () => {
   it('ohne Moment → normale Schwellen/Labels', () => {
     expect(momentColor(null, 7)).toContain('green')
     expect(momentLabel(null, 7)).toBe('7.0')
+  })
+})
+
+describe('missingMomentNote', () => {
+  it('Moment ohne Begründung → fehlt', () => {
+    expect(missingMomentNote('up', '')).toBe(true)
+    expect(missingMomentNote('down', undefined)).toBe(true)
+    expect(missingMomentNote('up', null)).toBe(true)
+  })
+  it('nur Leerzeichen zählen nicht als Begründung', () => {
+    expect(missingMomentNote('down', '   ')).toBe(true)
+  })
+  it('Moment mit Begründung → ok', () => {
+    expect(missingMomentNote('up', 'Dieser Spot!')).toBe(false)
+  })
+  it('ohne Moment ist keine Begründung nötig', () => {
+    expect(missingMomentNote(null, '')).toBe(false)
+    expect(missingMomentNote(undefined, undefined)).toBe(false)
   })
 })
 

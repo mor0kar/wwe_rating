@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BORDER_ACCENT, TINT, SHOW_TYPES, SHOW_FILTERS } from '@/lib/showStyle'
 import ShowLogo from '@/app/components/ShowLogo'
-import PersonRatingRow, { draftTotal } from '@/app/components/PersonRatingRow'
-import { fmt, scoreColor, avgScore, MOMENT_META, type Moment } from '@/lib/score'
+import PersonRatingRow, { draftTotal, MissingNotesHint } from '@/app/components/PersonRatingRow'
+import { fmt, scoreColor, avgScore, missingMomentNote, MOMENT_META, type Moment } from '@/lib/score'
 import { getUpcomingEvents, eventInstant, type CalendarEvent } from '@/lib/calendar'
 import ScoreRing from '@/app/components/ScoreRing'
 import CalendarReminder from '@/app/components/CalendarReminder'
@@ -78,7 +78,11 @@ function EditCard({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Wer ⚡/👎 gesetzt hat, muss begründen — bis dahin ist Speichern gesperrt
+  const missingNotes = Object.keys(baseRatings).filter(p => missingMomentNote(moment[p], notes[p]))
+
   async function handleSave() {
+    if (missingNotes.length) return
     // Nur Änderungen schicken — sonst überschreibt ein veralteter Listen-Stand
     // Bewertungen, die jemand anderes inzwischen geändert hat.
     const patch: ShowPatch = { ratings: {}, notes: {}, moments: {} }
@@ -89,7 +93,7 @@ function EditCard({
     Object.keys(baseRatings).forEach(p => {
       const m = moment[p] ?? null
       const total = draftTotal({ base: baseRatings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
-      const note = m && notes[p] ? notes[p] : null
+      const note = m && notes[p]?.trim() ? notes[p].trim() : null
       const unchanged = Math.abs(show.ratings[p] - total) < 0.005
         && (show.moments?.[p] ?? null) === m
         && (!m || (show.notes?.[p] ?? null) === note)
@@ -192,6 +196,7 @@ function EditCard({
       </div>
 
       {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
+      <MissingNotesHint names={missingNotes} />
 
       {/* Aktionen */}
       <div className="flex gap-2 pt-1">
@@ -203,7 +208,7 @@ function EditCard({
         </button>
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || missingNotes.length > 0}
           className="flex-1 bg-[#DC0000] hover:bg-red-700 text-white rounded-xl py-2 text-sm font-medium disabled:opacity-50 transition-colors"
         >
           {saving ? 'Speichern...' : 'Speichern'}

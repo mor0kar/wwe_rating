@@ -118,6 +118,7 @@ Score-Farben:
 Besondere Momente (`ratings.moment`, zentral in `lib/score.ts`):
 - `'up'` = ⚡ **Holy Shit!-Moment** — Bonus 0–5 auf den Basis-Score, lila, mit Begründung
 - `'down'` = 👎 **Heat** — Malus 0–5 (wird abgezogen), rot, mit Begründung
+- Begründung ist **Pflicht**: `missingMomentNote()` — Editoren sperren Speichern (`MissingNotesHint`), API antwortet 400
 - Helfer: `momentColor()`, `momentLabel()`, `MOMENT_META`, `draftTotal()` (in `PersonRatingRow`)
 
 Fonts:
@@ -266,6 +267,7 @@ Detaillierter Stand: siehe `TODOS.md`.
 - [x] Paralleles Bewerten repariert: Merge statt Ersetzen (WWE-041)
 - [x] Security-Härtung: Session-Token, Login-Limit, Cron fail-closed (WWE-042)
 - [x] Show-Liste lädt ewig: DB-Watchdog + Retry (WWE-043)
+- [x] Begründung Pflicht bei Holy Shit!/Heat (WWE-044)
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---

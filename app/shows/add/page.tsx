@@ -2,8 +2,8 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SHOW_TYPES } from '@/lib/showStyle'
-import PersonRatingRow, { draftTotal } from '@/app/components/PersonRatingRow'
-import type { Moment } from '@/lib/score'
+import PersonRatingRow, { draftTotal, MissingNotesHint } from '@/app/components/PersonRatingRow'
+import { missingMomentNote, type Moment } from '@/lib/score'
 
 function AddShowForm() {
   const router = useRouter()
@@ -32,7 +32,11 @@ function AddShowForm() {
     })
   }, [])
 
+  // Wer ⚡/👎 gesetzt hat, muss begründen — bis dahin ist Speichern gesperrt
+  const missingNotes = persons.filter(p => active[p] && missingMomentNote(moment[p], notes[p]))
+
   async function handleSave() {
+    if (missingNotes.length) return
     setSaving(true)
     setError(null)
     const effectiveRatings: Record<string, number> = {}
@@ -44,7 +48,7 @@ function AddShowForm() {
       effectiveRatings[p] = draftTotal({ base: ratings[p] ?? 0, moment: m, bonus: bonuses[p] ?? 0 })
       if (m) {
         effectiveMoments[p] = m
-        if (notes[p]) effectiveNotes[p] = notes[p]
+        if (notes[p]?.trim()) effectiveNotes[p] = notes[p].trim()
       }
     })
     const res = await fetch('/api/shows', {
@@ -160,10 +164,11 @@ function AddShowForm() {
         </div>
 
         {error && <p className="text-xs text-red-400" role="alert">{error}</p>}
+        <MissingNotesHint names={missingNotes} />
 
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || missingNotes.length > 0}
           className="w-full bg-[#DC0000] hover:bg-red-700 text-white rounded-xl py-3 font-bold uppercase tracking-wide disabled:opacity-50 mt-2 transition-colors"
         >
           {saving ? 'Speichern...' : 'Show speichern'}

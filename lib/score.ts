@@ -14,6 +14,13 @@ export const MOMENT_META: Record<Moment, { icon: string; label: string }> = {
   down: { icon: '👎', label: 'Heat' },
 }
 
+// Ein besonderer Moment braucht immer eine Begründung — sonst weiß später keiner,
+// warum so bewertet wurde. Gilt für Editoren (Speichern gesperrt) und API (400).
+export function missingMomentNote(moment: unknown, note: unknown): boolean {
+  if (moment !== 'up' && moment !== 'down') return false
+  return typeof note !== 'string' || note.trim() === ''
+}
+
 // Zahl auf max. 2 Nachkommastellen, immer mit mind. einer Dezimalstelle.
 export function fmt(n: number): string {
   const s = parseFloat(n.toFixed(2)).toString()
