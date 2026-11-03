@@ -22,13 +22,13 @@ describe('isValidTz', () => {
 })
 
 describe('missingShowWeeks berücksichtigt nachgetragene Shows', () => {
-  // Fester Bezugspunkt in der bekannten November-Lücke (SmackDown fehlt Nov 2–8,
-  // da nach RAW 02.11. erst wieder SmackDown am 11.12. gebucht ist).
-  const NOW = new Date('2026-10-20T12:00:00Z')
+  // Fester Bezugspunkt vor der bekannten Januar-Lücke (Woche 04.–10.01. ohne RAW
+  // und SmackDown, da nach dem Tampa-Doubleheader erst wieder am 15.01. gebucht ist).
+  const NOW = new Date('2026-12-20T12:00:00Z')
 
   it('nachgetragene Events erhöhen die Lücken nie (Monotonie)', () => {
     const base = missingShowWeeks([], NOW)
-    const withExtra = missingShowWeeks([{ type: 'SmackDown', date: '2026-11-06' }], NOW)
+    const withExtra = missingShowWeeks([{ type: 'SmackDown', date: '2027-01-08' }], NOW)
     expect(withExtra.length).toBeLessThanOrEqual(base.length)
   })
 
@@ -44,7 +44,7 @@ describe('missingShowWeeks berücksichtigt nachgetragene Shows', () => {
 
   it('ignoriert nachgetragene Nicht-Wochenshows (PLE/SNM)', () => {
     const base = missingShowWeeks([], NOW)
-    const withPle = missingShowWeeks([{ type: 'PLE', date: '2026-11-06' }], NOW)
+    const withPle = missingShowWeeks([{ type: 'PLE', date: '2027-01-08' }], NOW)
     expect(withPle.length).toBe(base.length)
   })
 })

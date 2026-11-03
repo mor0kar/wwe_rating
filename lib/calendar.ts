@@ -152,15 +152,35 @@ const EVENTS: CalendarEvent[] = [
   { date: '2026-10-26', type: 'RAW', venue: 'Save Mart Center', city: 'Fresno, CA', tz: 'America/Los_Angeles', localTime: '16:30' },
   { date: '2026-10-30', type: 'SmackDown', venue: 'Charleston Coliseum', city: 'Charleston, WV', tz: 'America/New_York', localTime: '19:30' },
 
-  // November — reguläre TV-Termine ab Mitte November noch nicht angekündigt;
-  // nur der bestätigte RAW-Auftakt + Survivor Series stehen fest.
+  // November
+  // Doubleheader in Brooklyn: SmackDown wurde vor dem Riad-Trip aufgezeichnet, läuft Fr 06.11.
   { date: '2026-11-02', type: 'RAW', venue: 'Barclays Center', city: 'Brooklyn, NY', tz: 'America/New_York', localTime: '19:30' },
+  { date: '2026-11-02', type: 'SmackDown', venue: 'Barclays Center', city: 'Brooklyn, NY', tz: 'America/New_York', localTime: '19:30', taped: true, airsOn: '2026-11-06' },
+  // Venue steht auf der WWE-Seite nur als Platzhalter ("The Venue").
+  { date: '2026-11-07', type: 'PLE', title: 'Crown Jewel', city: 'Riyadh, Saudi Arabia', tz: 'Asia/Riyadh', localTime: '19:00' },
+  { date: '2026-11-09', type: 'RAW', venue: 'Bon Secours Wellness Arena', city: 'Greenville, SC', tz: 'America/New_York', localTime: '19:30' },
+  { date: '2026-11-13', type: 'SmackDown', venue: 'Amerant Bank Arena', city: 'Fort Lauderdale, FL', tz: 'America/New_York', localTime: '19:30' },
+  { date: '2026-11-16', type: 'RAW', venue: 'Lenovo Center', city: 'Raleigh, NC', tz: 'America/New_York', localTime: '19:30' },
+  { date: '2026-11-20', type: 'SmackDown', venue: 'Ford Center', city: 'Evansville, IN', tz: 'America/Chicago', localTime: '18:30' },
+  // Doubleheader: RAW läuft live, SmackDown wird im Anschluss aufgezeichnet und läuft Fr 27.11.
+  { date: '2026-11-23', type: 'RAW', venue: 'Intrust Bank Arena', city: 'Wichita, KS', tz: 'America/Chicago', localTime: '16:30' },
+  { date: '2026-11-23', type: 'SmackDown', venue: 'Intrust Bank Arena', city: 'Wichita, KS', tz: 'America/Chicago', localTime: '16:30', taped: true, airsOn: '2026-11-27' },
   { date: '2026-11-28', type: 'PLE', title: 'Survivor Series: WarGames', venue: 'Daikin Park', city: 'Houston, TX', tz: 'America/Chicago', localTime: '16:30' },
+  { date: '2026-11-30', type: 'RAW', venue: 'Simmons Bank Arena', city: 'North Little Rock, AR', tz: 'America/Chicago', localTime: '19:30' },
 
-  // Dezember — Australien-Tour (Perth), Wrestlepalooza als Highlight
+  // Dezember — Australien-Tour (Perth) mit Wrestlepalooza, danach zwei Feiertags-Doubleheader
+  { date: '2026-12-04', type: 'SmackDown', venue: 'Van Andel Arena', city: 'Grand Rapids, MI', tz: 'America/Detroit', localTime: '19:30' },
+  { date: '2026-12-07', type: 'RAW', venue: 'Huntington Center', city: 'Toledo, OH', tz: 'America/New_York', localTime: '19:30' },
   { date: '2026-12-11', type: 'SmackDown', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
   { date: '2026-12-12', type: 'PLE', title: 'Wrestlepalooza', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
   { date: '2026-12-14', type: 'RAW', venue: 'RAC Arena', city: 'Perth, Australia', tz: 'Australia/Perth', localTime: '18:30' },
+  { date: '2026-12-18', type: 'SmackDown', venue: 'PeoplesBank Arena', city: 'Hartford, CT', tz: 'America/New_York', localTime: '19:30' },
+  // Doubleheader: SmackDown aufgezeichnet, läuft an Weihnachten (Fr 25.12.)
+  { date: '2026-12-21', type: 'RAW', venue: 'Capital One Arena', city: 'Washington, DC', tz: 'America/New_York', localTime: '18:30' },
+  { date: '2026-12-21', type: 'SmackDown', venue: 'Capital One Arena', city: 'Washington, DC', tz: 'America/New_York', localTime: '18:30', taped: true, airsOn: '2026-12-25' },
+  // Doubleheader: SmackDown aufgezeichnet, läuft an Neujahr (Fr 01.01.)
+  { date: '2026-12-28', type: 'RAW', venue: 'Benchmark International Arena', city: 'Tampa, FL', tz: 'America/New_York', localTime: '18:30' },
+  { date: '2026-12-28', type: 'SmackDown', venue: 'Benchmark International Arena', city: 'Tampa, FL', tz: 'America/New_York', localTime: '18:30', taped: true, airsOn: '2027-01-01' },
 
   // Januar 2027 — Europa-Tour (Road to Royal Rumble)
   { date: '2027-01-15', type: 'SmackDown', venue: 'Forest National', city: 'Brussels, Belgium', tz: 'Europe/Brussels', localTime: '19:30' },
@@ -169,6 +189,7 @@ const EVENTS: CalendarEvent[] = [
   { date: '2027-01-25', type: 'RAW', venue: '3Arena', city: 'Dublin, Ireland', tz: 'Europe/Dublin', localTime: '19:30' },
 
   // Februar 2027
+  { date: '2027-02-06', type: 'PLE', title: 'Royal Rumble', venue: 'State Farm Stadium', city: 'Glendale, AZ', tz: 'America/Phoenix', localTime: '15:30' },
   { date: '2027-02-19', type: 'SmackDown', venue: 'Spectrum Center', city: 'Charlotte, NC', tz: 'America/New_York', localTime: '19:30' },
 ]
 
@@ -177,7 +198,7 @@ export function getUpcomingEvents(): CalendarEvent[] {
 }
 
 // Datum, an dem die Liste zuletzt aktualisiert wurde (bei jeder Pflege anpassen).
-export const CALENDAR_LAST_UPDATED = '2026-08-31'
+export const CALENDAR_LAST_UPDATED = '2026-11-03'
 
 // Erinnerung auslösen, wenn weniger als so viele Tage Vorlauf bleiben …
 const REFRESH_RUNWAY_DAYS = 28
