@@ -217,7 +217,8 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 
 ### DB-Verbindung schlägt fehl
 → `POSTGRES_URL` muss die Supabase-Pooler-URL sein (Port 6543, `pgbouncer=true`)
-→ `lib/db.ts` nutzt `prepare: false` (Pooler kann keine Prepared Statements) + `max: 1` + Custom-DATE-Parser (DATE bleibt als `YYYY-MM-DD`-String)
+→ `lib/db.ts` nutzt `prepare: false` (Pooler kann keine Prepared Statements) + `fetch_types: false` + `max: 1` + Custom-DATE-Parser (DATE bleibt als `YYYY-MM-DD`-String)
+→ Watchdog in `lib/db.ts`: hängt eine Abfrage > 10 s (tote Verbindung nach Fluid-Compute-Pause), wird der Client neu aufgebaut. `sql` ist ein Proxy — weiter einfach `import sql from '@/lib/db'` nutzen
 
 ### Tailwind-Klassen werden nicht angewendet
 → Tailwind v4: kein `tailwind.config.ts`, Konfiguration via `globals.css`
@@ -264,6 +265,7 @@ Detaillierter Stand: siehe `TODOS.md`.
 - [x] Kalender-Update Nov 2026 – Feb 2027 (WWE-040)
 - [x] Paralleles Bewerten repariert: Merge statt Ersetzen (WWE-041)
 - [x] Security-Härtung: Session-Token, Login-Limit, Cron fail-closed (WWE-042)
+- [x] Show-Liste lädt ewig: DB-Watchdog + Retry (WWE-043)
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---

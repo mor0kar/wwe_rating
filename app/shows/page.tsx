@@ -462,6 +462,8 @@ export default function ShowsPage() {
   const { events: customEvents } = useCustomEvents()
   const [filter, setFilter] = useState('Alle')
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Alle angelegten Shows einmal laden; nach Typ wird clientseitig gefiltert
   // (kein erneuter Request pro Filter-Chip). Quelle auch für "Noch zu bewerten"
@@ -469,10 +471,15 @@ export default function ShowsPage() {
   const [allShows, setAllShows] = useState<Show[]>([])
 
   useEffect(() => {
-    const load = () => fetch('/api/shows?type=all')
+    // Timeout + ein automatischer zweiter Versuch: Hängt die DB-Verbindung einer
+    // Server-Instanz, baut der Server sie nach ~10 s neu auf (lib/db.ts) — der
+    // zweite Versuch klappt dann, statt minutenlang im Skelett zu warten.
+    const fetchShows = () => fetch('/api/shows?type=all', { signal: AbortSignal.timeout(15_000) })
       .then(r => (r.ok ? r.json() : Promise.reject()))
-      .then((data: Show[]) => setAllShows(data))
-      .catch(() => {})
+    const load = () => fetchShows()
+      .catch(fetchShows)
+      .then((data: Show[]) => { setAllShows(data); setLoadError(false) })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
     load()
     // Beim Zurückkehren in den Tab neu laden — sonst sieht man Bewertungen der
@@ -481,7 +488,13 @@ export default function ShowsPage() {
     const onVisible = () => { if (document.visibilityState === 'visible') load() }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
+  }, [reloadKey])
+
+  function retryLoad() {
+    setLoading(true)
+    setLoadError(false)
+    setReloadKey(k => k + 1)
+  }
 
   const shows = filter === 'Alle' ? allShows : allShows.filter(s => s.type === filter)
   const existingKeys = new Set(allShows.map(s => `${s.type}|${s.date}`))
@@ -608,6 +621,16 @@ export default function ShowsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : loadError && allShows.length === 0 ? (
+          <div role="alert" className="bg-zinc-900 border border-red-900/50 rounded-2xl p-8 text-center">
+            <p className="text-sm text-zinc-400">Shows konnten nicht geladen werden.</p>
+            <button
+              onClick={retryLoad}
+              className="mt-3 text-xs font-bold uppercase tracking-wide bg-[#DC0000] hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Erneut versuchen
+            </button>
           </div>
         ) : shows.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">

@@ -452,6 +452,18 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-043] Show-Liste lädt ewig (hängende DB-Verbindung)
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch (Bug)
+- **Beschreibung:** Seite lädt, aber die Shows erscheinen minutenlang nicht; Strg+F5 hilft nicht.
+- **Ursache:** November 2026. Vercel-Logs: `GET /api/shows` lief 2× in den 300-s-Timeout (11:10/11:15 UTC, Fehlergruppe schon seit Juni). DB winzig und nicht blockiert, kein Client-Speicher-Problem. Eine Verbindung zum Pooler stirbt unbemerkt (Fluid Compute friert Instanzen ein), postgres.js hat kein Query-Timeout → wartet ewig; wegen `max: 1` hängen alle Requests der Instanz dahinter.
+- **Fix:**
+  (1) `lib/db.ts`: Watchdog — dauert eine Abfrage/Transaktion > 10 s, wird der Client verworfen und neu aufgebaut; hängende Abfragen scheitern sofort. `sql` ist ein Proxy auf den jeweils aktuellen Client, Aufrufer unverändert. `fetch_types: false` (keine SQL-Arrays; spart Roundtrip beim Verbindungsaufbau).
+  (2) Show-Liste: 15-s-Timeout, ein automatischer zweiter Versuch, sonst Fehlermeldung mit „Erneut versuchen" statt Endlos-Skelett.
+  6 neue Tests (`lib/db.test.ts`), 42/42 grün, `next build` grün; zusätzlich mit echtem postgres.js gegen einen hängenden Fake-Server geprüft (Abbruch nach 10,0 s, danach frische Verbindung).
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig
