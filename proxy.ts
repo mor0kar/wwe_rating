@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { PIN_COOKIE } from '@/lib/auth'
+import { PIN_COOKIE, isValidSession } from '@/lib/auth'
 
 const PUBLIC_PATHS = ['/login', '/api/auth', '/api/cron']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) return NextResponse.next()
+  if (PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))) return NextResponse.next()
 
-  const auth = request.cookies.get(PIN_COOKIE)
-  if (auth?.value === process.env.APP_PIN) return NextResponse.next()
+  if (isValidSession(request.cookies.get(PIN_COOKIE)?.value)) return NextResponse.next()
 
   return NextResponse.redirect(new URL('/login', request.url))
 }

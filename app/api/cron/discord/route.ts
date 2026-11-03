@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from '@/lib/db'
+import { safeEqual } from '@/lib/auth'
 import {
   getUpcomingEvents,
   eventInstant,
@@ -122,8 +123,10 @@ async function run(test = false): Promise<NextResponse> {
 
 function authorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
-  if (!secret) return true // wenn kein Secret gesetzt ist, nicht blockieren
-  return req.headers.get('authorization') === `Bearer ${secret}`
+  // Ohne Secret gesperrt — die Route ist öffentlich (kein PIN), sonst könnte
+  // jeder beliebig Nachrichten in den Discord-Channel auslösen.
+  if (!secret) return false
+  return safeEqual(req.headers.get('authorization') ?? '', `Bearer ${secret}`)
 }
 
 // Vercel-Cron ruft per GET auf; POST für manuelles Triggern erlaubt.

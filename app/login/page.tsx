@@ -4,23 +4,25 @@ import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [pin, setPin] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError(false)
+    setError(null)
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pin }),
-    })
-    if (res.ok) {
+    }).catch(() => null)
+    if (res?.ok) {
       router.push('/shows')
     } else {
-      setError(true)
+      setError(res?.status === 429
+        ? 'Zu viele Fehlversuche — warte ein paar Minuten'
+        : 'Falscher PIN — versuch\'s nochmal')
       setPin('')
     }
     setLoading(false)
@@ -59,8 +61,8 @@ export default function LoginPage() {
             autoFocus
           />
           {error && (
-            <p className="text-sm text-red-400 text-center">
-              Falscher PIN — versuch&apos;s nochmal
+            <p className="text-sm text-red-400 text-center" role="alert">
+              {error}
             </p>
           )}
           <button

@@ -23,12 +23,13 @@ Keine Breaking Changes an bestehenden API-Contracts ohne Absprache.
 
 - **Supabase + postgres.js** via `import sql from '@/lib/db'` — kein Prisma, kein Drizzle, kein Neon
 - **POSTGRES_URL** muss Supabase-Pooler sein (Port 6543, `pgbouncer=true`), KEIN `channel_binding=require`
-- `lib/db.ts`: `max: 1` + Custom-DATE-Parser (DATE bleibt `YYYY-MM-DD`-String)
-- **PIN-Auth** via httpOnly Cookie — kein JWT, kein NextAuth
+- `lib/db.ts`: `prepare: false` (Pooler-Pflicht) + `max: 1` + Custom-DATE-Parser (DATE bleibt `YYYY-MM-DD`-String)
+- **PIN-Auth** → HMAC-Session-Cookie (`lib/auth.ts`: `sessionToken`/`isValidSession`, Vergleiche via `safeEqual`) — PIN nie ins Cookie, kein JWT, kein NextAuth
+- `/api/cron/*` ist öffentlich (kein PIN) → Secret-Check muss fail-closed sein
 - `proxy.ts` (ex `middleware.ts`) schützt alle Routen außer `/login`, `/api/auth`, `/api/cron`
 - Score als `DECIMAL(4,2)` speichern, beim Lesen mit `Number()` casten
 - UNIQUE `(show_id, person_name)` in ratings — Einzel-Upsert via POST `ON CONFLICT DO UPDATE`
-- **PATCH /api/shows/[id] ersetzt ALLE Ratings** — für Einzel-Rating POST nutzen (siehe Memory)
+- **PATCH /api/shows/[id] merged** — Clients schicken nur Änderungen; nie wieder "alles ersetzen" (siehe Memory)
 - Schema-Migrationen nie ohne Rückfrage; als `db/migrations/NNN_*.sql` + `db/schema.sql` pflegen
 
 ## DB-Schema (Referenz — Details im Memory)
@@ -44,7 +45,7 @@ NXT historisch im CHECK, wird aber nicht mehr genutzt.
 
 - `GET  /api/shows?type=all|RAW|...` → Show[] mit eingebetteten ratings + notes
 - `POST /api/shows` → { type, date, title?, comment?, ratings, notes? }
-- `PATCH /api/shows/[id]` → ersetzt alle Ratings | `POST /api/shows/[id]` → { person, score, note? } UPSERT
+- `PATCH /api/shows/[id]` → Merge (nur mitgeschickte Felder/Personen, `removed` löscht gezielt) | `POST /api/shows/[id]` → { person, score, note? } UPSERT
 - `DELETE /api/shows/[id]`
 - `GET/POST/DELETE /api/persons`
 - `POST /api/auth` → { pin } → setzt Cookie
