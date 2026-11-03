@@ -410,6 +410,48 @@ Nach jeder Iteration aktualisieren.
 
 ---
 
+### [WWE-040] Kalender-Update Nov 2026 – Feb 2027
+- **Status:** 🟢 Erledigt
+- **Priorität:** Mittel
+- **Beschreibung:** Abgleich gegen die offizielle WWE-Eventseite (Paste vom 03.11.2026). Die regulären TV-Termine ab Mitte November fehlten bisher.
+- **Evidenz:** November 2026. `lib/calendar.ts`:
+  (1) RAW/SmackDown Nov–Dez ergänzt, drei Doubleheader (Wichita 23.11., Washington 21.12., Tampa 28.12.) als RAW live + SmackDown getapt (`airsOn` Fr). Brooklyn 02.11. ebenfalls Doubleheader (SmackDown läuft 06.11., laut Bericht, nicht im Paste).
+  (2) PLEs: **Crown Jewel** 07.11. Riad (Venue auf WWE-Seite nur Platzhalter → leer gelassen), **Royal Rumble** 06.02.2027 State Farm Stadium Glendale.
+  (3) **Gefiltert:** House Shows (Road to Survivor Series, Holiday Tour inkl. MSG 26.12., Australien/NZ, Road to Royal Rumble), NXT, AAA (Guerra de Titanes Guadalajara 19.12., Acapulco 02.01.).
+  (4) `CALENDAR_LAST_UPDATED='2026-11-03'`; Gap-Test auf die bekannte Januar-Lücke umgestellt (November-Lücke existiert nicht mehr).
+  `npx vitest run` grün.
+
+---
+
+### [WWE-041] Paralleles Bewerten: Bewertungen gingen verloren / Speichern ohne Wirkung
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch (Bug)
+- **Beschreibung:** Waren zwei Leute gleichzeitig auf der Seite, wurden Bewertungen nicht übernommen oder man konnte gar nicht bewerten.
+- **Ursachen & Fixes:** November 2026.
+  (1) `PATCH /api/shows/[id]` hat alle Ratings gelöscht und den (veralteten) Client-Stand neu eingefügt → überschrieb Bewertungen anderer. Jetzt **Merge**: Clients schicken nur Änderungen (+ `removed`), Server upsertet in einer Transaktion und liefert den aktuellen Stand zurück.
+  (2) Spoiler-Modus: `RatingEditor` initialisierte den Entwurf beim ersten Render, als `useIdentity` „me" noch nicht kannte → eigene Zeile „nicht dabei", Speichern tat stillschweigend nichts. Entwurf wird jetzt bei jedem Öffnen frisch gebaut.
+  (3) Fehler beim Speichern wurden verschluckt → jetzt Fehlermeldung, Editor bleibt offen (Detail, Inline-Edit, Add).
+  (4) `lib/db.ts`: `prepare: false` — Supabase-Pooler (Transaction-Mode) unterstützt keine Prepared Statements.
+  (5) `POST /api/shows`: Advisory-Lock auf Typ+Datum verhindert Doppel-Shows; zweite Eintragung ergänzt die bestehende (`merged: true` → Weiterleitung zur Show).
+  (6) Show-Liste lädt beim Zurückkehren in den Tab neu.
+  `npx tsc --noEmit` sauber, Tests grün, `next build` grün. End-to-End gegen die DB noch nach Deploy zu zweit testen.
+
+---
+
+### [WWE-042] Security-Härtung
+- **Status:** 🟢 Erledigt
+- **Priorität:** Hoch
+- **Beschreibung:** Security-Review der App.
+- **Evidenz:** November 2026.
+  (1) **PIN-Brute-Force:** Cookie enthielt den PIN im Klartext, Login ohne Limit → kurzer PIN in Minuten erratbar (auch direkt per Cookie). Jetzt HMAC-Session-Token (`lib/auth.ts`, Schlüssel `AUTH_SECRET` bzw. Fallback `POSTGRES_URL`), timing-sicherer Vergleich, Login-Sperre 10 Fehlversuche/15 Min. pro IP (in-memory pro Instanz) + 1 s Verzögerung. Alle müssen sich einmal neu einloggen.
+  (2) `/api/cron/discord` war ohne `CRON_SECRET` offen → jetzt fail-closed.
+  (3) `npm audit fix`: 9 Lücken geschlossen (u.a. kritisch in Next.js → 16.4.4).
+  (4) Security-Header (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) in `next.config.ts`; Eingabe-Validierung für Personen- und Show-API; Public-Paths nur noch exakt.
+  (5) Geprüft & ok: Supabase-RLS aktiv (kein Zugriff über PostgREST), keine Secrets im Repo, SQL parametrisiert.
+  7 neue Tests (`lib/auth.test.ts`), 36/36 grün, `next build` grün; Login/Cookie/Sperre/Cron/Header lokal per `next start` verifiziert.
+
+---
+
 ## Backlog
 
 - [ ] Jahres-Rückblick / Jahresstatistiken filterbar — Priorität: Niedrig

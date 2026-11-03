@@ -22,7 +22,7 @@ Vor jeder Arbeit im Repo lesen und einhalten.
 | Sprache | TypeScript |
 | Styling | Tailwind CSS v4 |
 | Datenbank | Supabase PostgreSQL (direkt, kein Prisma) |
-| Auth | PIN via httpOnly Cookie (kein NextAuth) |
+| Auth | PIN → signiertes httpOnly-Session-Cookie (HMAC, kein NextAuth) |
 | Deployment | Vercel (Free Tier) |
 
 ---
@@ -187,9 +187,10 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 - Node Version: 20
 - Env Vars in Vercel:
   - `POSTGRES_URL` — Supabase-Pooler (Port 6543, `pgbouncer=true`)
-  - `APP_PIN` — gemeinsamer Login-PIN
+  - `APP_PIN` — gemeinsamer Login-PIN (Login sperrt nach 10 Fehlversuchen/15 Min. pro IP)
+  - `AUTH_SECRET` — optional, signiert das Session-Cookie (Fallback: `POSTGRES_URL`); Cookie enthält nie den PIN
   - `DISCORD_WEBHOOK_URL` — Channel-Webhook für tägliche Erinnerungen
-  - `CRON_SECRET` — schützt `/api/cron/discord` (Vercel sendet automatisch als `Authorization: Bearer …`)
+  - `CRON_SECRET` — **Pflicht**, schützt `/api/cron/discord` (Vercel sendet automatisch als `Authorization: Bearer …`; ohne Secret ist die Route gesperrt)
 - Cron: `vercel.json` triggert täglich 07:00 UTC `/api/cron/discord`
 
 ---
@@ -216,7 +217,7 @@ ratings (id SERIAL PK, show_id FK → shows.id CASCADE,
 
 ### DB-Verbindung schlägt fehl
 → `POSTGRES_URL` muss die Supabase-Pooler-URL sein (Port 6543, `pgbouncer=true`)
-→ `lib/db.ts` nutzt `max: 1` + Custom-DATE-Parser (DATE bleibt als `YYYY-MM-DD`-String)
+→ `lib/db.ts` nutzt `prepare: false` (Pooler kann keine Prepared Statements) + `max: 1` + Custom-DATE-Parser (DATE bleibt als `YYYY-MM-DD`-String)
 
 ### Tailwind-Klassen werden nicht angewendet
 → Tailwind v4: kein `tailwind.config.ts`, Konfiguration via `globals.css`
@@ -260,6 +261,9 @@ Detaillierter Stand: siehe `TODOS.md`.
 - [x] UI/UX-Feinschliff (WWE-032)
 - [x] Score-Verlauf: Punkte zuverlässig antippbar (WWE-033)
 - [x] Kalender-Pflege + Custom-Events + 12h/24h-Toggle (WWE-034)
+- [x] Kalender-Update Nov 2026 – Feb 2027 (WWE-040)
+- [x] Paralleles Bewerten repariert: Merge statt Ersetzen (WWE-041)
+- [x] Security-Härtung: Session-Token, Login-Limit, Cron fail-closed (WWE-042)
 - [ ] Auto-Import WWE-Terminplan (WWE-008) — wartet auf API-Entscheidung
 
 ---
